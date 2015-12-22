@@ -1,0 +1,273 @@
+{% extends "web/base.html" %}
+{% block css %}
+    <link rel="stylesheet"
+          href="{{ nekumo_root }}/static/web/libs/angular-ui-notification/dist/angular-ui-notification.min.css">
+    <link rel="stylesheet"
+          href="{{ nekumo_root }}/static/web/libs/angular-ui-notification/dist/angular-ui-notification-extra.css">
+    <link rel="stylesheet" type="text/css" href="{{ nekumo_root }}/static/web/css/node.css">
+    <link rel="stylesheet"
+          type="text/css" href="{{ nekumo_root }}/static/web/own_libs/md-data-table/dist/md-data-table-style.css">
+{% endblock %}
+{% block content %}
+    {% raw %}
+        <main class="container" ng-controller="Nodes">
+            <div layout="row" layout-align="center">
+                <ol class="breadcrumb layout-max-width">
+                    <li>
+                        <a href="/" ng-if="breadcrumb_nodes.length"
+                           ng-click="go_to('/'); $event.preventDefault()">
+                            <span class="label label-primary md-default-theme md-primary md-hue-2 md-bg">Raíz</span>
+                        </a>
+                        <span class="label label-default" ng-if="!breadcrumb_nodes
+                        .length">Raíz</span>
+                    </li>
+                    <li ng-repeat="node in breadcrumb_nodes track by $index" ng-class="{'active': $last}">
+                        <a href="{{ '../' + _.repeat('../', breadcrumb_nodes.length - $index - 1) + node + '/' }}"
+                           ng-if="!$last"
+                           class="md-default-theme md-accent md-fg"
+                           ng-click="go_to('../' + _.repeat('../', breadcrumb_nodes.length - $index - 1) + node + '/',
+                           $event)">
+                            {{ node | decodeURIComponent }}</a>
+                        <span ng-if="$last">{{ node | decodeURIComponent }}</span>
+                    </li>
+                </ol>
+            </div>
+            <div layout="row" layout-align="center">
+                <!-- <md-card layout="row" flex class="md-default-theme layout-max-width"> -->
+
+                <md-data-table
+                    id="nodes"
+                    ng-if="nodes.length"
+                    flex class="md-default-theme layout-max-width"
+                    action-cons="true"
+                    alternate-headers="'contextual'"
+                    table-card="{visible: true, title: name, actionIcons: true}">
+
+                    <md-data-table-header-row>
+                        <md-data-table-column align-rule="left" class="col-icon"></md-data-table-column>
+                        <md-data-table-column class="col-name">Nombre</md-data-table-column>
+                        <md-data-table-column class="col-size">Tamaño</md-data-table-column>
+                        <md-data-table-column class="col-date">Modificado</md-data-table-column>
+                        <md-data-table-column class="col-actions">Acciones</md-data-table-column>
+                    </md-data-table-header-row>
+
+                    <md-data-table-row ng-repeat="node in nodes | orderBy:['type', 'name']"
+                                       row-selected="node.selected"
+                                       class="ani-slide {{ node.extra_style_class }}"
+                                       ng-init="node.selected = false">
+                        <md-data-table-cell html-content="1">
+                            <ng-md-icon icon="{{ (node.selected ? 'check_box' : node.get_icon().icon)  }}"
+                                        ng-click="node.selected = !node.selected"
+                                        style="fill: {{ (node.selected ? '#3bbf38' : node.get_icon().color) }}"
+                                        size="28"
+                                        options='{"duration": 375, "rotation": "none"}'></ng-md-icon>
+                        </md-data-table-cell>
+                        <md-data-table-cell html-content="1">
+                            <a href="{{ node.get_relative_path() }}" class="md-default-theme md-accent md-fg"
+                               ng-click="(node.type == 'dir' ? go_to(
+                                                               node.get_relative_path(), $event) :
+                                                               $event.stopPropagation()) ">
+                               {{ node.name }}
+                            </a>
+                        </md-data-table-cell>
+                        <md-data-table-cell>
+                            {{ node.size | bytes }}
+                        </md-data-table-cell>
+                        <md-data-table-cell html-content="1" class="col-date">
+                            <div>
+                                <span am-time-ago="node.mtime" am-preprocess="unix"></span>
+                                <md-tooltip md-direction="top">
+                                    {{ (node.mtime * 1000) | amDateFormat:'dddd, MMMM Do YYYY, h:mm:ss a' }}
+                                </md-tooltip>
+                            </div>
+                        </md-data-table-cell>
+                        <md-data-table-cell html-content="1">
+                            <md-menu>
+                                <md-button aria-label="Open phone interactions menu" class="md-icon-button"
+                                           ng-click="open_menu($mdOpenMenu, $event, node)">
+                                    <md-icon class="mdi mdi-dots-vertical" md-menu-origin icon="dots-vertical">
+                                    </md-icon>
+                                </md-button>
+                                <md-menu-content width="3">
+                                    <md-menu-item>
+                                        <md-button ng-click="ctrl.redial($event)">
+                                            <md-icon class="mdi mdi-download" md-menu-align-target icon="download">
+                                            </md-icon>
+                                            Descargar
+                                        </md-button>
+                                    </md-menu-item>
+                                    <md-menu-item>
+                                        <md-button ng-click="ctrl.redial($event)">
+                                            <md-icon class="mdi mdi-pencil" md-menu-align-target icon="pencil">
+                                            </md-icon>
+                                            Cambiar nombre
+                                        </md-button>
+                                    </md-menu-item>
+                                    <md-menu-item>
+                                        <md-button ng-click="ctrl.redial($event)">
+                                            <md-icon class="mdi mdi-information" md-menu-align-target
+                                                     icon="information">
+                                            </md-icon>
+                                            Información
+                                        </md-button>
+                                    </md-menu-item>
+                                    <md-menu-divider></md-menu-divider>
+                                    <md-menu-item ng-if="cut_copy_action != ''">
+                                        <md-button ng-click="set_menu_right_node(null); paste(node, $event)"
+                                                   class="md-primary">
+                                            <md-icon class="mdi mdi-content-paste" md-menu-align-target
+                                                     icon="content-paste">
+                                            </md-icon>
+                                            Pegar
+                                        </md-button>
+                                    </md-menu-item>
+                                    <md-menu-item>
+                                        <md-button ng-disabled="cut_copy_action != ''"
+                                                   ng-click="copy()">
+                                            <md-icon class="mdi mdi-content-copy" md-menu-align-target
+                                                     icon="content-copy">
+                                            </md-icon>
+                                            Copiar
+                                        </md-button>
+                                    </md-menu-item>
+                                    <md-menu-item>
+                                        <md-button ng-click="set_menu_right_node(null); cut(node, $event)"
+                                                   ng-disabled="cut_copy_action != ''">
+                                            <md-icon class="mdi mdi-content-cut" md-menu-align-target
+                                                     icon="content-cut">
+                                            </md-icon>
+                                            Cortar
+                                        </md-button>
+                                    </md-menu-item>
+                                    <md-menu-item>
+                                        <md-button ng-click="set_menu_right_node(null); rm(node, $event)">
+                                            <md-icon class="mdi mdi-delete" md-menu-align-target
+                                                     icon="delete">
+                                            </md-icon>
+                                            Eliminar
+                                        </md-button>
+                                    </md-menu-item>
+                                </md-menu-content>
+                            </md-menu>
+                        </md-data-table-cell>
+                    </md-data-table-row>
+
+                </md-data-table>
+                <!-- </md-card> -->
+                <!-- TODO: Esto solo debería aparecer tras unos segundos. -->
+                <md-card class="layout-max-width" ng-if="nodes == undefined && slow_load">
+                    <md-card-content ng-init="quotes = [
+                        'Éste puede ser un buen momento para hacerse un café.',
+                        'Estamos recogiendo los datos uno por uno, como antaño.',
+                        'No parpadee. O se perderá cómo aparecen los archivos ante usted...',
+                        'Espere, estamos recogiendo los trastos.',
+                        'No te pierdes nada mirando este mensaje.'
+                    ]">
+                        <h2 class="md-title">Unos momentos de paciencia, porfavor</h2>
+                        <p>{{ quotes[Math.floor(Math.random() * quotes.length)] }}</p>
+                    </md-card-content>
+                </md-card>
+                <md-card class="layout-max-width" ng-if="nodes != undefined && !nodes.length">
+                    <md-card-content>
+                        <h2 class="md-title">Nada de nada</h2>
+                        <p>
+                            Esta puede ser un buena oportunidad para dar un buen uso a esta carpeta. Sube
+                            archivos y haz feliz a este solitario lugar. También puedes borrarla
+                            aquí y ahora, ninguno te miraremos mal. Puede que la carpeta sí; pero qué diablos,
+                            ¿no es solo una carpeta?
+                        </p>
+                    </md-card-content>
+                    <div class="md-actions" layout="row" layout-align="end center">
+                        <md-button class="md-warn">
+                            <ng-md-icon icon="delete" size="24" class="md-default-theme md-warn md-fg"></ng-md-icon>
+                            Sepultar carpeta
+                        </md-button>
+                        <md-button class="md-primary">
+                            <ng-md-icon icon="file_upload" size="24"
+                                        class="md-default-theme md-primary md-fg"></ng-md-icon>
+                            Subir archivos
+                        </md-button>
+                    </div>
+                </md-card>
+            </div>
+        </main>
+    {% endraw %}
+    {% raw %}
+    <script type="text/ng-template" id="nekumo/copy_paste_nodes_exists.tmpl.html">
+        <md-dialog aria-label="El destino ya existe">
+            <form>
+                <md-toolbar class="md-primary">
+                    <div class="md-toolbar-tools">
+                        <h2>Los archivos o directorios destino ya existen</h2>
+                        <span flex></span>
+                    </div>
+                </md-toolbar>
+                <md-dialog-content style="max-width:800px;max-height:810px; ">
+                    <div id="cut_copy_nodes_exists">
+                        <p>Mientras se intentaba {{ (copy_paste_action == 'move' ? 'mover' : 'copiar') }} los
+                            siguientes archivos o carpetas, nos hemos dado cuenta que ya había un archivo o carpeta
+                            con su nombre donde iban a pegarse. Necesitamos saber qué hacer: renombrar, ignorar o
+                            sobrescribir.</p>
+                        <md-content layout-padding ng-repeat="node in cut_copy_nodes_exists">
+                            <div layout layout-sm="column">
+                                <md-input-container flex md-no-float>
+                                    <md-icon ng-if="node.orig.type == 'dir'" class="mdi mdi-folder"
+                                             icon="folder"></md-icon>
+                                    <md-icon ng-if="node.orig.type != 'dir'" class="mdi mdi-file"
+                                             icon="file"></md-icon>
+                                    <input ng-model="node.dest_node.name" type="text" placeholder="Nombre">
+                                </md-input-container>
+                                <md-input-container ng-init="node.dest_node.orig_name = node.dest_node.name ">
+                                    <md-button ng-click="rename(node.orig, node.dest_node);"
+                                               ng-disabled="node.dest_node.orig_name == node.dest_node.name">
+                                        <md-icon class="mdi mdi-pencil" icon="pencil"></md-icon>
+                                        Renombrar
+                                    </md-button>
+                                </md-input-container>
+                                <md-input-container>
+                                    <md-button>
+                                        <md-icon class="mdi mdi-exit-to-app" icon="exit-to-app"></md-icon>
+                                        Ignorar
+                                    </md-button>
+                                </md-input-container>
+                                <md-input-container>
+                                    <md-button>
+                                        <md-icon class="mdi mdi-weight-kilogram" icon="weight-kilogram">
+                                        </md-icon>
+                                        Sobrescribir
+                                    </md-button>
+                                </md-input-container>
+                            </div>
+                        </md-content>
+                    </div>
+                </md-dialog-content>
+                <div class="md-actions" layout="row">
+                    <span flex></span>
+                    <md-button style="margin-right:20px;">
+                        <md-icon class="mdi mdi-exit-to-app" icon="exit-to-app"></md-icon>
+                        Ignorar siempre
+                    </md-button>
+                    <md-button style="margin-right:20px;">
+                        <md-icon class="mdi mdi-weight-kilogram" icon="weight-kilogram"></md-icon>
+                        Sobrescribir siempre
+                    </md-button>
+                </div>
+            </form>
+        </md-dialog>
+    </script>
+
+    {% endraw %}
+{% endblock %}
+{% block extra_js_libs %}
+<script src="{{ nekumo_root }}/static/web/libs/svg-morpheus/compile/unminified/svg-morpheus.js"></script>
+<script src="{{ nekumo_root }}/static/web/own_libs/md-data-table/dist/md-data-table.js"></script>
+<script src="{{ nekumo_root }}/static/web/own_libs/md-data-table/dist/md-data-table-templates.js"></script>
+<script src="{{ nekumo_root }}/static/web/libs/angular-uuid4/angular-uuid4.js"></script>
+<script src="{{ nekumo_root }}/static/web/libs/moment/moment.js"></script>
+<script src="{{ nekumo_root }}/static/web/libs/angular-moment/angular-moment.js"></script>
+<script src="{{ nekumo_root }}/static/web/libs/angular-ui-notification/dist/angular-ui-notification.min.js"></script>
+
+{% endblock %}
+{% block extra_js %}
+    <script src="{{ nekumo_root }}/static/web/js/node.js"></script>
+{% endblock %}

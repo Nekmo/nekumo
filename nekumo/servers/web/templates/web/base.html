@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html ng-app="{{ ngApp | default("NekumoApp") }}">
+    <head>
+        <title>Nekumo</title>
+        <meta charset="utf-8">
+        <!--
+        <link rel="stylesheet" href="{{ nekumo_root }}/static/web/libs/bootstrap/dist/css/bootstrap.css">
+        <link rel="stylesheet" href="{{ nekumo_root }}/static/web/libs/bootstrap-material-design/dist/css/material.css">
+        <link rel="stylesheet"
+              href="{{ nekumo_root }}/static/web/libs/bootstrap-material-design/dist/css/material-fullpalette.css">
+        <link rel="stylesheet" href="{{ nekumo_root }}/static/web/libs/bootstrap-material-design/dist/css/ripples.css">
+        <link rel="stylesheet" href="{{ nekumo_root }}/static/web/libs/bootstrap-material-design/dist/css/roboto.css">
+        -->
+        <link rel="stylesheet" href="{{ nekumo_root }}/static/web/libs/angular-material/angular-material.css">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic">
+        <link rel="stylesheet" href="{{ nekumo_root }}/static/web/css/base.css">
+        <link href="{{ nekumo_root }}/static/web/libs/mdi/css/materialdesignicons.css"
+              media="all" rel="stylesheet" type="text/css" />
+        <!-- TODO: Incluir RobotoDraft -->
+        {% block css %}{% endblock %}
+    </head>
+    <body{% if body_controller %} ng-controller="{{ body_controller }}"{% endif %}>
+        <md-progress-linear id="loading" md-mode="indeterminate"></md-progress-linear>
+        {% block top %}
+            <header class="container" layout="row" layout-align="center">
+                <div class="breadcrumb layout-max-width">
+                    <img src="{{ nekumo_root }}/static/web/img/logo.svg" alt="" class="logo">
+                </div>
+            </header>
+        {% endblock %}
+        {% block content %}{% endblock %}
+    </body>
+
+    {% raw %}
+    <script type="text/ng-template" id="nekumo/critical.tmpl.html">
+        <md-dialog aria-label="Error crítico">
+            <form>
+                <md-toolbar class="md-warn">
+                    <div class="md-toolbar-tools">
+                        <h2><strong>Error crítico:</strong> {{ title }}</h2>
+                        <span flex></span>
+                    </div>
+                </md-toolbar>
+                <md-dialog-content style="max-width:800px;max-height:810px; ">
+                    <div>
+                        <p ng-if="message">{{ message }}</p>
+                        <p ng-if="reasons"><strong>¿Cuál es la razón?</strong> {{ reasons }}</p>
+                        <p ng-if="solutions"><strong>¿Qué puedo hacer?</strong> {{ solutions }}</p>
+                        <p>No es posible recuperarse tras un error crítico. Tendrá que recargar la pestaña e
+                            intentarlo de nuevo. Si el error se sigue repitiendo, porfavor, comuníquelo para que
+                            intentemos darle una solución.</p>
+                    </div>
+                </md-dialog-content>
+                <div class="md-actions" layout="row">
+                    <span flex></span>
+                    <md-button
+                            ng-click="button.callback()"
+                            style="margin-right:20px;" ng-repeat="button in buttons">
+                        {{ button.message }}
+                    </md-button>
+                </div>
+            </form>
+        </md-dialog>
+    </script>
+    {% endraw %}
+    {% raw %}
+    <script type="text/ng-template" id="nekumo/error.tmpl.html">
+        <md-toast class="md-warn error">
+            <div>
+                <h2><strong>Error:</strong> {{ title }}</h2>
+                <p ng-if="message">{{ message }}</p>
+                <p ng-if="reasons"><strong>¿Cuál es la razón?</strong> {{ reasons }}</p>
+                <p ng-if="solutions"><strong>¿Qué puedo hacer?</strong> {{ solutions }}</p>
+                <p>Los errores pueden ser debidos a un problema puntual, y pueda seguir trabajando con normalidad,
+                    o tratarse de fallos de programación. si el problema continuase, recargue la pestaña. Si cree
+                    saber la razón, trate de reproducirlo, y repórtelo.</p>
+                <div class="md-actions" layout="row">
+                    <span flex></span>
+                    <md-button
+                            ng-click="button.callback()"
+                            style="margin-right:20px;" ng-repeat="button in buttons">
+                        {{ button.message }}
+                    </md-button>
+                </div>
+            </div>
+        </md-toast>
+    </script>
+    {% endraw %}
+    {% block js %}
+        <script src="{{ nekumo_root }}/static/web/libs/jquery/dist/jquery.js"></script>
+        <script src="{{ nekumo_root }}/static/web/libs/uuid-js/lib/uuid.js"></script>
+        <script src="{{ nekumo_root }}/static/web/libs/angular/angular.js"></script>
+        <script src="{{ nekumo_root }}/static/web/libs/angular-websocket/dist/angular-websocket.js"></script>
+        <script src="{{ nekumo_root }}/static/web/libs/angular-animate/angular-animate.js"></script>
+        <script src="{{ nekumo_root }}/static/web/libs/angular-aria/angular-aria.js"></script>
+        <script src="{{ nekumo_root }}/static/web/libs/angular-material/angular-material.js"></script>
+        <script src="{{ nekumo_root }}/static/web/libs/angular-material-icons/angular-material-icons.js"></script>
+        <script src="{{ nekumo_root }}/static/web/libs/angular-material-colors/md-colors.js"></script>
+        <script src="{{ nekumo_root }}/static/web/libs/restangular/dist/restangular.js"></script>
+        <script src="{{ nekumo_root }}/static/web/libs/sprintf/src/sprintf.js"></script>
+        <script src="{{ nekumo_root }}/static/web/libs/sprintf/src/angular-sprintf.js"></script>
+        <script src="{{ nekumo_root }}/static/web/libs/lodash/lodash.js"></script>
+        <script src="{{ nekumo_root }}/static/web/own_libs/dialog-message/dialog-message.js"></script>
+        {% block extra_js_libs %}{% endblock %}
+        <script>
+            var app = angular.module('{{ ngApp | default("NekumoApp") }}', {{ angular_modules|default([])|tojson }});
+            var websocket_path = '{{ websocket_path }}';
+            var static_root = '{{ nekumo_root }}/static/'
+        </script>
+        <script src="{{ nekumo_root }}/static/web/js/ws.js"></script>
+        <script src="{{ nekumo_root }}/static/web/js/base.js"></script>
+        {% block extra_js %}{% endblock %}
+    {% endblock %}
+</html>

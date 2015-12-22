@@ -1,0 +1,115 @@
+@import '../libs/bootstrap-sass-official/assets/stylesheets/bootstrap/variables';
+
+$line-height-computed: 0;
+$breadcrumb-bg: none;
+$border-radius-base: 0;
+$header-padding-top: 15px;
+$header-padding-bottom: 10px;
+$max_width: 1000px;
+
+@import '../libs/bootstrap-sass-official/assets/stylesheets/bootstrap/breadcrumbs';
+@import '../libs/bootstrap-sass-official/assets/stylesheets/bootstrap/mixins/labels';
+@import '../libs/bootstrap-sass-official/assets/stylesheets/bootstrap/labels';
+
+
+/* Arreglos Bootstrap */
+.breadcrumb {
+    margin-top: 0; // Hay demasiado margin superior para el header
+
+    .label {
+        // En los breadcrumbs, hay demasiado padding-button si se usa los labels (tags)
+        padding-bottom: 2px;
+    }
+}
+
+.breadcrumb > li + li:before {
+    // Bug en content desde la paleta de bootstrap para la flecha
+    content: "/\00a0";
+}
+
+/* Arreglos Angular Material */
+button.md-button {
+    ng-md-icon[size="24"] {
+        display: inline-block;
+        float: left;
+        padding-top: 5px;
+        height: 24px;
+    }
+    md-icon {
+        font-size: 20px;
+    }
+}
+
+md-input-container {
+    md-icon {
+        font-size: 22px;
+    }
+}
+
+md-menu-content {
+    max-height: 360px;
+}
+
+md-toast {
+    height: auto;
+    max-height: none;
+    position: fixed; // ¿Por qué carajos están por defecto como absolute?
+    &.error {
+        background-color: #e43a28;
+    }
+}
+
+md-menu-item md-icon.mdi {
+    font-size: 24px;
+}
+
+/* Arreglos navegador */
+*:focus {
+    outline: 0; // Chromium añade una línea en todos los elementos como inputs bajo focus
+}
+
+body {
+    background: #eee;
+    // position: fixed;
+    // top: 0;
+    // bottom: 0;
+    // left: 0;
+    // right: 0;
+    // margin: 0;
+    // padding: 0;
+    // overflow: scroll;
+    height: auto;
+}
+
+a {
+    text-decoration: none;
+}
+
+#loading, #loading div {
+    position: absolute;
+    top: 0;
+    float: left;
+}
+
+/* Cabecera */
+header {
+    padding-top: $header-padding-top;
+    padding-bottom: $header-padding-bottom;
+    img.logo {
+        height: 80px;
+    }
+}
+
+@media all and (orientation: landscape) {
+    .layout-max-width {
+      width: 100%;
+      max-width: $max_width;
+    }
+}
+
+@media all and (orientation: portrait) {
+    .layout-max-width {
+        width: 100%;
+        /* max-width: 600px; */
+    }
+}

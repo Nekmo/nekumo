@@ -1,0 +1,142 @@
+@charset "UTF-8";
+.breadcrumb {
+  padding: 8px 15px;
+  margin-bottom: 0;
+  list-style: none;
+  background-color: none;
+  border-radius: 0; }
+  .breadcrumb > li {
+    display: inline-block; }
+    .breadcrumb > li + li:before {
+      content: "/ ";
+      padding: 0 5px;
+      color: #ccc; }
+  .breadcrumb > .active {
+    color: #777777; }
+
+.label {
+  display: inline;
+  padding: 0.2em 0.6em 0.3em;
+  font-size: 75%;
+  font-weight: bold;
+  line-height: 1;
+  color: #fff;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: .25em; }
+  .label:empty {
+    display: none; }
+  .btn .label {
+    position: relative;
+    top: -1px; }
+
+a.label:hover,
+a.label:focus {
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer; }
+
+.label-default {
+  background-color: #777777; }
+  .label-default[href]:hover,
+  .label-default[href]:focus {
+    background-color: #5e5e5e; }
+
+.label-primary {
+  background-color: #337ab7; }
+  .label-primary[href]:hover,
+  .label-primary[href]:focus {
+    background-color: #286090; }
+
+.label-success {
+  background-color: #5cb85c; }
+  .label-success[href]:hover,
+  .label-success[href]:focus {
+    background-color: #449d44; }
+
+.label-info {
+  background-color: #5bc0de; }
+  .label-info[href]:hover,
+  .label-info[href]:focus {
+    background-color: #31b0d5; }
+
+.label-warning {
+  background-color: #f0ad4e; }
+  .label-warning[href]:hover,
+  .label-warning[href]:focus {
+    background-color: #ec971f; }
+
+.label-danger {
+  background-color: #d9534f; }
+  .label-danger[href]:hover,
+  .label-danger[href]:focus {
+    background-color: #c9302c; }
+
+/* Arreglos Bootstrap */
+.breadcrumb {
+  margin-top: 0; }
+  .breadcrumb .label {
+    padding-bottom: 2px; }
+
+.breadcrumb > li + li:before {
+  content: "/\00a0"; }
+
+/* Arreglos Angular Material */
+button.md-button ng-md-icon[size="24"] {
+  display: inline-block;
+  float: left;
+  padding-top: 5px;
+  height: 24px; }
+
+button.md-button md-icon {
+  font-size: 20px; }
+
+md-input-container md-icon {
+  font-size: 22px; }
+
+md-menu-content {
+  max-height: 360px; }
+
+md-toast {
+  height: auto;
+  max-height: none;
+  position: fixed; }
+  md-toast.error {
+    background-color: #e43a28; }
+
+md-menu-item md-icon.mdi {
+  font-size: 24px; }
+
+/* Arreglos navegador */
+*:focus {
+  outline: 0; }
+
+body {
+  background: #eee;
+  height: auto; }
+
+a {
+  text-decoration: none; }
+
+#loading, #loading div {
+  position: absolute;
+  top: 0;
+  float: left; }
+
+/* Cabecera */
+header {
+  padding-top: 15px;
+  padding-bottom: 10px; }
+  header img.logo {
+    height: 80px; }
+
+@media all and (orientation: landscape) {
+  .layout-max-width {
+    width: 100%;
+    max-width: 1000px; } }
+
+@media all and (orientation: portrait) {
+  .layout-max-width {
+    width: 100%;
+    /* max-width: 600px; */ } }
