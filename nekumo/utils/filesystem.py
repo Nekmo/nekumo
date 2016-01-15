@@ -1,7 +1,7 @@
 import os
 import shutil
 import re
-from nekumo.utils.strings import replaces, multiple_search
+from .strings import replaces, multiple_search
 
 __author__ = 'nekmo'
 

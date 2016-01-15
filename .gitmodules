@@ -1,0 +1,3 @@
+[submodule "nekumo/utils"]
+	path = nekumo/utils
+	url = git@github.com:Nekmo/nekutils.git

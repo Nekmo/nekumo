@@ -1,5 +1,6 @@
 # coding=utf-8
 import sys
+import six
 try:
     import ushlex as shlex
 except ImportError:
@@ -8,11 +9,10 @@ except ImportError:
         warnings.warn("Ushlex is not installed. Shlex not support Unicode!", ImportWarning)
     import shlex
 
-import re
-from nekumo.utils.ints import get_int
-
 if sys.version_info.major >= 3:
     unicode = str
+import re
+from .ints import get_int
 
 __author__ = 'nekmo'
 
@@ -71,3 +71,12 @@ def replaces(text, **kwargs):
     for key, value in kwargs.items():
         text = text.replace(key, value)
     return text
+
+
+def is_chars(value):
+    return isinstance(value, (six.text_type, six.binary_type))
+
+
+def regex_default(pattern, text, default=''):
+    m = re.match(pattern, text)
+    return m.group(1) if m is not None else default

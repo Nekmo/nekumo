@@ -4,17 +4,17 @@
         <title>Nekumo</title>
         <meta charset="utf-8">
         <!--
-        <link rel="stylesheet" href="{{ nekumo_root }}/static/web/libs/bootstrap/dist/css/bootstrap.css">
-        <link rel="stylesheet" href="{{ nekumo_root }}/static/web/libs/bootstrap-material-design/dist/css/material.css">
+        <link rel="stylesheet" href="{{ nekumo_root }}/static/src/web/libs/bootstrap/dist/css/bootstrap.css">
+        <link rel="stylesheet" href="{{ nekumo_root }}/static/src/web/libs/bootstrap-material-design/dist/css/material.css">
         <link rel="stylesheet"
-              href="{{ nekumo_root }}/static/web/libs/bootstrap-material-design/dist/css/material-fullpalette.css">
-        <link rel="stylesheet" href="{{ nekumo_root }}/static/web/libs/bootstrap-material-design/dist/css/ripples.css">
-        <link rel="stylesheet" href="{{ nekumo_root }}/static/web/libs/bootstrap-material-design/dist/css/roboto.css">
+              href="{{ nekumo_root }}/static/src/web/libs/bootstrap-material-design/dist/css/material-fullpalette.css">
+        <link rel="stylesheet" href="{{ nekumo_root }}/static/src/web/libs/bootstrap-material-design/dist/css/ripples.css">
+        <link rel="stylesheet" href="{{ nekumo_root }}/static/src/web/libs/bootstrap-material-design/dist/css/roboto.css">
         -->
-        <link rel="stylesheet" href="{{ nekumo_root }}/static/web/libs/angular-material/angular-material.css">
+        <link rel="stylesheet" href="{{ nekumo_root }}/static/src/web/libs/angular-material/angular-material.css">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic">
-        <link rel="stylesheet" href="{{ nekumo_root }}/static/web/css/base.css">
-        <link href="{{ nekumo_root }}/static/web/libs/mdi/css/materialdesignicons.css"
+        <link rel="stylesheet" href="{{ nekumo_root }}/static/src/web/css/base.css">
+        <link href="{{ nekumo_root }}/static/src/web/libs/mdi/css/materialdesignicons.css"
               media="all" rel="stylesheet" type="text/css" />
         <!-- TODO: Incluir RobotoDraft -->
         {% block css %}{% endblock %}
@@ -24,7 +24,7 @@
         {% block top %}
             <header class="container" layout="row" layout-align="center">
                 <div class="breadcrumb layout-max-width">
-                    <img src="{{ nekumo_root }}/static/web/img/logo.svg" alt="" class="logo">
+                    <img src="{{ nekumo_root }}/static/src/web/img/logo.svg" alt="" class="logo">
                 </div>
             </header>
         {% endblock %}
@@ -87,28 +87,28 @@
     </script>
     {% endraw %}
     {% block js %}
-        <script src="{{ nekumo_root }}/static/web/libs/jquery/dist/jquery.js"></script>
-        <script src="{{ nekumo_root }}/static/web/libs/uuid-js/lib/uuid.js"></script>
-        <script src="{{ nekumo_root }}/static/web/libs/angular/angular.js"></script>
-        <script src="{{ nekumo_root }}/static/web/libs/angular-websocket/dist/angular-websocket.js"></script>
-        <script src="{{ nekumo_root }}/static/web/libs/angular-animate/angular-animate.js"></script>
-        <script src="{{ nekumo_root }}/static/web/libs/angular-aria/angular-aria.js"></script>
-        <script src="{{ nekumo_root }}/static/web/libs/angular-material/angular-material.js"></script>
-        <script src="{{ nekumo_root }}/static/web/libs/angular-material-icons/angular-material-icons.js"></script>
-        <script src="{{ nekumo_root }}/static/web/libs/angular-material-colors/md-colors.js"></script>
-        <script src="{{ nekumo_root }}/static/web/libs/restangular/dist/restangular.js"></script>
-        <script src="{{ nekumo_root }}/static/web/libs/sprintf/src/sprintf.js"></script>
-        <script src="{{ nekumo_root }}/static/web/libs/sprintf/src/angular-sprintf.js"></script>
-        <script src="{{ nekumo_root }}/static/web/libs/lodash/lodash.js"></script>
-        <script src="{{ nekumo_root }}/static/web/own_libs/dialog-message/dialog-message.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/jquery/dist/jquery.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/uuid-js/lib/uuid.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/angular/angular.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/angular-websocket/dist/angular-websocket.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/angular-animate/angular-animate.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/angular-aria/angular-aria.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/angular-material/angular-material.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/angular-material-icons/angular-material-icons.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/angular-material-colors/md-colors.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/restangular/dist/restangular.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/sprintf/src/sprintf.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/sprintf/src/angular-sprintf.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/lodash/lodash.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/own_libs/dialog-message/dialog-message.js"></script>
         {% block extra_js_libs %}{% endblock %}
         <script>
             var app = angular.module('{{ ngApp | default("NekumoApp") }}', {{ angular_modules|default([])|tojson }});
             var websocket_path = '{{ websocket_path }}';
             var static_root = '{{ nekumo_root }}/static/'
         </script>
-        <script src="{{ nekumo_root }}/static/web/js/ws.js"></script>
-        <script src="{{ nekumo_root }}/static/web/js/base.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/js/ws.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/js/base.js"></script>
         {% block extra_js %}{% endblock %}
     {% endblock %}
 </html>
