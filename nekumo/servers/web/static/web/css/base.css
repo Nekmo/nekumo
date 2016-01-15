@@ -102,7 +102,9 @@ md-toast {
   height: auto;
   max-height: none;
   position: fixed; }
-  md-toast.error {
+  md-toast .md-toast-content {
+    height: auto; }
+  md-toast.error .md-toast-content {
     background-color: #e43a28; }
 
 md-menu-item md-icon.mdi {

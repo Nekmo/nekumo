@@ -11,20 +11,24 @@
 
 /* Arreglos específicos para tabla nodos */
 
-th {
-    &.col-icon {
-        width: 20px;
-    }
-    &.col-size {
-        width: 80px;
-    }
-    &.col-date {
-        width: 80px;
-    }
-    &.col-actions {
-        width: 20px;
+#nodes {
+    th {
+        &.col-icon {
+            padding-left: 28px;
+            width: 20px;
+        }
+        &.col-size {
+            width: 80px;
+        }
+        &.col-date {
+            width: 80px;
+        }
+        &.col-actions {
+            width: 20px;
+        }
     }
 }
+
 
 td {
     > span {
@@ -59,38 +63,48 @@ tr {
 
     }
 
-    th {
-        &.col-icon {
-            width: 20px;
-        }
-        &.col-size {
-            width: 120px;
-        }
-        &.col-date {
-            width: 140px;
-        }
-        &.col-actions {
-            width: 20px;
+    #nodes {
+        th {
+            &.col-icon {
+                padding-left: 28px;
+                width: 20px;
+            }
+            &.col-size {
+                width: 120px;
+            }
+            &.col-date {
+                width: 140px;
+            }
+            &.col-actions {
+                width: 20px;
+            }
         }
     }
 }
 
+#nodes-card {
+    margin-bottom: 180px;
+}
+
 #nodes {
-    margin-bottom: 150px;
+    margin-bottom: 20px;
 }
 
 /* Modal de Cut Copy Nodes Exists */
 #cut_copy_nodes_exists {
     p {
-        margin-top: 6px;
+        margin-top: 12px;
         margin-bottom: 6px;
+        margin-left: 12px;
+        margin-right:12px;
     }
     md-input-container {
         >md-icon {
-            margin-top: 6px;
+            margin-top: 4px;
         }
         input.md-input {
             margin-top: 6px;
+            padding-left: 20px;
         }
     }
 }

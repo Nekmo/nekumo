@@ -54,7 +54,10 @@ md-toast {
     height: auto;
     max-height: none;
     position: fixed; // ¿Por qué carajos están por defecto como absolute?
-    &.error {
+    .md-toast-content {
+        height: auto;
+    }
+    &.error .md-toast-content {
         background-color: #e43a28;
     }
 }

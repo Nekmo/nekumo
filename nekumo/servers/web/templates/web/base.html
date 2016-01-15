@@ -19,7 +19,7 @@
         <!-- TODO: Incluir RobotoDraft -->
         {% block css %}{% endblock %}
     </head>
-    <body{% if body_controller %} ng-controller="{{ body_controller }}"{% endif %}>
+    <body ng-controller="{{ body_controller | default('BaseCtrl') }}">
         <md-progress-linear id="loading" md-mode="indeterminate"></md-progress-linear>
         {% block top %}
             <header class="container" layout="row" layout-align="center">

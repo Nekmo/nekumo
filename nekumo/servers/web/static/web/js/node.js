@@ -82,8 +82,10 @@ app.config(function ($mdThemingProvider) {
 
 
 app.factory('Node', function(WebSocket){
-    var NodeObject = function(data){
+    var NodeObject = function(data, nodes){
         var self = this;
+        self.selected = false;
+        // TODO: nodes. $scope de Nodes
 
         self.__init__ = function(){
             self.node = self.get_node();
@@ -119,7 +121,7 @@ app.factory('Node', function(WebSocket){
         };
 
         self.split = function(){
-            var nodes_split = self.get_node().split();
+            var nodes_split = self.get_node().split('/');
             var last = nodes_split.pop();
             var new_node = new NodeObject({node: nodes_split.join('/'), name: nodes_split[nodes_split.length - 1],
                                            type: 'dir'});
@@ -165,14 +167,40 @@ app.factory('Node', function(WebSocket){
             return icon;
         };
 
+        self.select = function(){
+            self.selected = true;
+            if(nodes.selected.indexOf(self) == -1){
+                nodes.selected.push(self);
+            }
+        };
+
+        self.unselect = function(){
+            self.selected = false;
+            if(nodes.selected.indexOf(self) > -1){
+                nodes.selected.splice(nodes.selected.indexOf(self), 1);
+            }
+        };
+
+        self.isSelected = function(){
+            return self.selected;
+        };
+
+        self.toggleSelect = function(){
+            if(self.isSelected()){
+                self.unselect();
+            } else {
+                self.select();
+            }
+        };
+
         self.__init__();
     };
     NodeObject.prototype.constructor = Object;
 
 
     return {
-        create: function(data){
-            return new NodeObject(data);
+        create: function(data, nodes){
+            return new NodeObject(data, nodes);
         }
     }
 });
@@ -220,21 +248,74 @@ app.animation('.ani-slide', [function($timeout) {
   }
 }]);
 
+app.directive('nekumoNodeMenu', function($rootScope, $timeout){
+    return {
+        scope: {
+            node: '='
+        },
+        templateUrl: 'nekumo/menu-node.tmpl.html',
+        link: function(scope){
+            scope.open_menu = function($mdOpenMenu, ev) {
+                // TODO: menu_right
+                if(scope.node && !(scope.node.selected)){
+                    scope.node.select();
+                    scope.menu_right_node = scope.node;
+                }
+                $mdOpenMenu(ev);
+
+                $rootScope.$on('mdMenuHidden', function(){
+                    $timeout(function(){
+                        // El evento de cerrar menú se lanza antes que la ejecución de los métodos del propio menú,
+                        // por lo que no hay forma de diferenciar cuando se ha pulsado una opción, o se ha cerrado
+                        // el menú por tocar otra parte de la pantalla. Por ello, pongo un timeout, para que dé
+                        // tiempo a que se inicie la ejecución del método seleccionado en el menú.
+                        // TODO:
+                        if($scope.menu_right_node == null){
+                            return
+                        }
+                        console.debug('Deseleccionar ' + $scope.menu_right_node);
+                        $scope.menu_right_node.unselect();
+                        $scope.menu_right_node = null;
+                    }, 50);
+                });
+            };
+
+            scope.menuCtrl = {
+                paste: scope.$parent.paste,
+                copy: scope.$parent.copy,
+                cut: scope.$parent.cut,
+                rm: scope.$parent.rm
+            };
+        }
+    }
+});
 
 app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $window, $mdDialog, $mdToast, $mdMenu,
                                   WebSocket, Node, DialogMessage) {
+    // Debug
+    NodesScope = $scope;
+    $scope.filter = {};
+    $scope.orderField = 'name';
+    $scope.selected = [];
+    $scope.cut_copy_nodes_exists = []; // Elementos que se copiarán o moverán en el pegado
+    $scope.cut_copy_action = ''; // copy o move. Acción de pegado en la que se está ahora
+    $scope.cutCopyDefaultAction = null;
+    $scope.name = ''; // Nombre del nodo en el que se encuentra ahora
+    // El nodo que se ha seleccionado por usar el menú. Si se cancela la operación, debe devolverse a su
+    // estado original
+    $scope.menu_right_node = null;
 
     var cut_copy = function(){
         var selected = $scope.get_selected_nodes();
         $scope.cut_copy_nodes = [];
-        angular.forEach(selected, function(x){x.extra_style_class = 'cut_copy'; x.selected = false;
-                                              $scope.cut_copy_nodes.push(x)});
+        angular.forEach(selected, function(x){x.extra_style_class = 'cut_copy'; x.unselect();
+            $scope.cut_copy_nodes.push(x)});
         $mdToast.show(
             $mdToast.simple()
-              .action('Cancelar')
-              .highlightAction(false)
-              .content('Tiene archivos en su portapapeles listos para pegar.')
-              .hideDelay(0)
+                .action('Cancelar')
+                .highlightAction(false)
+                .content('Tiene archivos en su portapapeles listos para pegar.')
+                .hideDelay(0)
         ).then(function(response){
             if(response == 'ok'){
                 // Se ha cancelado el pegado
@@ -249,17 +330,12 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
         });
     };
 
-    $scope.cut_copy_nodes_exists = []; // Elementos que se copiarán o moverán en el pegado
-    $scope.cut_copy_action = ''; // copy o move. Acción de pegado en la que se está ahora
-    $scope.name = ''; // Nombre del nodo en el que se encuentra ahora
-    // El nodo que se ha seleccionado por usar el menú. Si se cancela la operación, debe devolverse a su
-    // estado original
-    $scope.menu_right_node = null;
-
     $scope.getDirectory = function(node){
+        // TODO: cambiar a loadDirectory
         if(!node){
             node = $scope.node;
         }
+        $scope.unselectAll();
         $scope.nodes = null;
         // Añadiremos y quitaremos ani-slide debido a un bug en mdTable, que no permite usar ngClass.
         $('#nodes').find('tr').removeClass('ani-slide');
@@ -272,7 +348,7 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
         }, 50);
         WebSocket.get({'method': 'ls', 'node': decodeURIComponent(node)}).then(function (data) {
             $scope.nodes = _.map(data.nodes, function (node) {
-                return new Node.create(node);
+                return new Node.create(node, $scope);
             });
             $scope.name = data.name;
             $timeout.cancel(slow_load);
@@ -298,12 +374,24 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
         return _.filter($scope.nodes, function(node){ return node.selected });
     };
 
-    $scope.select_all = function(){
-            angular.forEach($scope.get_selected_nodes(), function(x){x.selected = true})
+    $scope.toggleSelected = function(){
+        if(!$scope.allSelected()){
+            $scope.selectAll();
+        } else {
+            $scope.unselectAll();
+        }
+    };
+
+    $scope.allSelected = function(){
+        return $scope.selected.length >= ($scope.nodes || []).length;
+    };
+
+    $scope.selectAll = function(){
+            angular.forEach($scope.nodes, function(x){x.select()})
         };
 
-    $scope.deselect_all = function(){
-        angular.forEach($scope.get_selected_nodes(), function(x){x.selected = false})
+    $scope.unselectAll = function(){
+        angular.forEach($scope.get_selected_nodes(), function(x){x.unselect()})
     };
 
     $scope.set_menu_right_node = function(node){
@@ -326,7 +414,6 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
 
         $timeout(function(){
             $scope.node = getCurrentNode();
-            console.debug($scope.node);
             $scope.breadcrumb_nodes = $scope.get_breadcrumb_nodes();
             $scope.getDirectory();
         }, 50);
@@ -360,10 +447,10 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
                 }
                 angular.forEach(files, function(file){ file.rm(removed_callback); });
                 angular.forEach(dirs, function(dir){ dir.rm(removed_callback); });
-                $scope.deselect_all();
+                $scope.unselectAll();
             }, function() {
                 // Cancelado.
-                $scope.deselect_all();
+                $scope.unselectAll();
             });
         };
 
@@ -402,29 +489,39 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
     };
 
     $scope.paste = function(dest_dir){
+        function pasteFinished(){
+            if(!$scope.cut_copy_nodes.length){
+                $scope.cut_copy_action = '';
+                angular.forEach($scope.nodes, function(x){
+                    x.extra_style_class = (x.extra_style_class ?
+                        x.extra_style_class.replace('cut_copy', '') : '');
+                });
+                $mdToast.show(
+                    $mdToast.simple()
+                        .content('Todos los archivos se han terminado de pegar.')
+                );
+            }
+        }
         function paste(orig, dest_node, action){
             orig[action](dest_node, function(data){
                 if($scope.cut_copy_action == 'cut'){
                     $scope.remove_node(data.node);
                 }
                 $scope.remove_node(data.node, $scope.cut_copy_nodes);
-                if(!$scope.cut_copy_nodes.length){
-                    $scope.cut_copy_action = '';
-                    angular.forEach($scope.nodes, function(x){
-                        x.extra_style_class = (x.extra_style_class ?
-                                               x.extra_style_class.replace('cut_copy', '') : '');
-                    });
-                    $mdToast.show(
-                        $mdToast.simple()
-                            .content('Todos los archivos se han terminado de pegar.')
-                    );
-                }
+                pasteFinished();
             });
+        }
+        function ignore(orig){
+            $scope.remove_node(orig.node, $scope.cut_copy_nodes);
+            pasteFinished();
         }
         function check_node_exists(orig, dest_node, action){
             dest_node.exists(function(data){
-                if(!data.exists){
+                if(!data.exists || $scope.cutCopyDefaultAction == 'override'){
                     return paste(orig, dest_node, action);
+                }
+                if($scope.cutCopyDefaultAction == 'ignore'){
+                    return ignore(orig);
                 }
                 if(!$scope.cut_copy_nodes_exists.length){
                     // Abro por primera vez la ventana de Cut copy Nodes Exists
@@ -436,25 +533,46 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
                         clickOutsideToClose: false,
                         controller: function DialogController($scope, $mdDialog){
                             $scope.hide = function() {
-                              $mdDialog.hide();
+                                $mdDialog.hide();
                             };
                             $scope.cancel = function() {
-                              $mdDialog.cancel();
+                                $mdDialog.cancel();
                             };
                             $scope.rename = function(orig, dest_node){
                                 dest_node = dest_node.split()[0].get_subnode(dest_node.name);
-                                // TODO: NO ESTÁ FUNCIONANDO: {"method":"exists","node":"/subfalseimage2.jpg"}
                                 check_node_exists(orig, dest_node, action);
+                                $scope.clear(orig);
                             };
-                            $scope.ignore = function(){
-
+                            $scope.ignore = function(orig, dest_node){
+                                ignore(orig);
+                                $scope.clear(orig);
                             };
-                            $scope.override = function(){
-
+                            $scope.override = function(orig, dest_node){
+                                paste(orig, dest_node, action);
+                                $scope.clear(orig);
                             };
+                            $scope.clear = function(orig){
+                                var cut_copy_node_exists =_.filter($scope.cut_copy_nodes_exists, {orig: orig})[0];
+                                _.remove($scope.cut_copy_nodes_exists, function(x){ return x == cut_copy_node_exists});
+                                if(!$scope.cut_copy_nodes_exists.length){
+                                    $scope.hide();
+                                }
+                            };
+                            $scope.overrideAll = function(){
+                                $scope.cutCopyDefaultAction = 'override';
+                                $scope.applyAll();
+                            };
+                            $scope.ignoreAll = function(){
+                                $scope.cutCopyDefaultAction = 'ignore';
+                                $scope.applyAll();
+                            };
+                            $scope.applyAll = function(){
+                                angular.forEach($scope.cut_copy_nodes_exists, function(x){
+                                    $scope[$scope.cutCopyDefaultAction](x.orig, x.dest_node);
+                                });
+                            }
                         }
                     });
-
                 }
                 $scope.cut_copy_nodes_exists.push({orig: orig, dest_node: dest_node});
             });
@@ -463,7 +581,7 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
         if(!dest_dir){
             dest_dir = $scope.node;
         } else {
-            dest_dir.selected = false;
+            dest_dir.unselect();
             dest_dir = dest_dir.get_node();
         }
         var action = {'copy': 'copy', 'cut': 'move'}[$scope.cut_copy_action];
@@ -473,37 +591,6 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
             var dest_node = new Node.create({'node': dest_path, 'name': orig.name});
             check_node_exists(orig, dest_node, action);
         });
-    };
-
-    $scope.open_menu = function($mdOpenMenu, ev, node) {
-        $scope.menu_right_node = node;
-        if(!node.selected){
-            node.selected = true;
-            $scope.menu_right_node = node;
-        }
-        $mdOpenMenu(ev);
-    };
-
-    $rootScope.$on('mdMenuHidden', function(){
-        $timeout(function(){
-            // El evento de cerrar menú se lanza antes que la ejecución de los métodos del propio menú,
-            // por lo que no hay forma de diferenciar cuando se ha pulsado una opción, o se ha cerrado
-            // el menú por tocar otra parte de la pantalla. Por ello, pongo un timeout, para que dé
-            // tiempo a que se inicie la ejecución del método seleccionado en el menú.
-            if($scope.menu_right_node == null){
-                return
-            }
-            console.debug('Deseleccionar ' + $scope.menu_right_node);
-            $scope.menu_right_node.selected = false;
-            $scope.menu_right_node = null;
-        }, 50);
-    });
-
-    // TODO: Esto se debe llevar a un controller general de la aplicación
-    $mdMenu._hide = $mdMenu.hide;
-    $mdMenu.hide = function(){
-        $rootScope.$broadcast('mdMenuHidden');
-        $mdMenu._hide.apply(this, arguments);
     };
 
     $scope._ = _;

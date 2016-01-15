@@ -7,16 +7,17 @@
     font-size: 22px; }
 
 /* Arreglos específicos para tabla nodos */
-th.col-icon {
+#nodes th.col-icon {
+  padding-left: 28px;
   width: 20px; }
 
-th.col-size {
+#nodes th.col-size {
   width: 80px; }
 
-th.col-date {
+#nodes th.col-date {
   width: 80px; }
 
-th.col-actions {
+#nodes th.col-actions {
   width: 20px; }
 
 td > span {
@@ -35,25 +36,32 @@ tr.alert td {
 @media all and (max-width: 768px) {
   .mdDataTable tr th, .mdDataTable tr td {
     font-size: 1.5em !important; }
-  th.col-icon {
+  #nodes th.col-icon {
+    padding-left: 28px;
     width: 20px; }
-  th.col-size {
+  #nodes th.col-size {
     width: 120px; }
-  th.col-date {
+  #nodes th.col-date {
     width: 140px; }
-  th.col-actions {
+  #nodes th.col-actions {
     width: 20px; } }
 
+#nodes-card {
+  margin-bottom: 180px; }
+
 #nodes {
-  margin-bottom: 150px; }
+  margin-bottom: 20px; }
 
 /* Modal de Cut Copy Nodes Exists */
 #cut_copy_nodes_exists p {
-  margin-top: 6px;
-  margin-bottom: 6px; }
+  margin-top: 12px;
+  margin-bottom: 6px;
+  margin-left: 12px;
+  margin-right: 12px; }
 
 #cut_copy_nodes_exists md-input-container > md-icon {
-  margin-top: 6px; }
+  margin-top: 4px; }
 
 #cut_copy_nodes_exists md-input-container input.md-input {
-  margin-top: 6px; }
+  margin-top: 6px;
+  padding-left: 20px; }

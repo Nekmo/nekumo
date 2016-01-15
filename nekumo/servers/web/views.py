@@ -23,7 +23,7 @@ Serializer = JsonSerializer
 def index(path='/'):
     nekumo = current_app.nekumo
     modules = ANGULAR_MODULES.copy()
-    modules += ['angularMoment', 'ui-notification', 'mdDataTable']
+    modules += ['angularMoment', 'ui-notification', 'md.data.table']
     try:
         # Obtengo el nodo para saber si es un archivo o un directorio
         node = Node(nekumo, method='info', node=path).get_own_best_class()
