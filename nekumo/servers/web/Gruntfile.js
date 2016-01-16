@@ -24,6 +24,8 @@ function readAsserts(file, regex){
 module.exports = function(grunt) {
 
     // Project configuration.
+    // TODO: debo separar base.min.js y node.min.js por bibliotecas y código propio. Esto es debido por el corte
+    // necesario para la configuración.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         ngAnnotate: {
