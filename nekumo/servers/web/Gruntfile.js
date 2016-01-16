@@ -1,50 +1,42 @@
-const fs = require('fs');
-
-function getMatches(string, regex, index) {
-    index || (index = 1); // default to the first capturing group
-    var matches = [];
-    var match;
-    while (match = regex.exec(string)) {
-        matches.push(match[index]);
-    }
-    return matches;
-}
-
-function readAsserts(file, regex){
-    regex = new RegExp(regex, 'gi');
-    var text = fs.readFileSync(file, 'utf-8');
-    var matches = getMatches(text, regex);
-    console.log('Parsing asserts from *' + file + '*:');
-    matches.forEach(function(x){
-        console.log('  - ' + x);
-    });
-    return matches;
-}
 
 module.exports = function(grunt) {
 
     // Project configuration.
-    // TODO: debo separar base.min.js y node.min.js por bibliotecas y código propio. Esto es debido por el corte
-    // necesario para la configuración.
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
-        ngAnnotate: {
+        // Los archivos .html tienen en las rutas el {{ nekumo_root }} en su src. Es necesario
+        // retirarlo y hacerlo relativo para que usemin pueda encontrarlo y usarlo.
+        // El destino será un directorio temporal llamado _tmpBuild
+        replace: {
+            example: {
+                src: ['templates/*/*.html'],             // source files array (supports minimatch)
+                dest: '_tmpBuild/',             // destination directory or file
+                replacements: [{
+                    from: '{{ nekumo_root }}/',                   // string replacement
+                    to: '../'
+                }]
+            }
+        },
+        // Se obtendrán todos los css y js de los html generados anteriormente y se llevarán concatenados
+        // al directorio temporal .tmp/concat/
+        useminPrepare: {
+            html: '_tmpBuild/*.html',
             options: {
-                banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd HH:MM") %> */\n'
-            },
+              dest: 'static/build'
+            }
+        },
+        // A los .js se les aplica ngAnnotate para arreglar el problema con los function($scope, ...).
+        ngAnnotate: {
             build: {
                 files: [
                     {
-                        src: readAsserts('templates/web/node.html', '"{{ nekumo_root' + ' }}/([^"}]+\.js)"'),
-                        dest: '/tmp/_nekumoBuild/node.js'
-                    },
-                    {
-                        src: readAsserts('templates/web/base.html', '"{{ nekumo_root }}/([^"}]+\.js)"'),
-                        dest: '/tmp/_nekumoBuild/base.js'
+                        expand: true,
+                        src: '.tmp/concat/*.js'
                     }
                 ]
             }
         },
+        // Ahora se minifican al directorio correcto, static/build.
         uglify: {
             options: {
                 banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd HH:MM") %> */\n'
@@ -52,16 +44,14 @@ module.exports = function(grunt) {
             build: {
                 files: [
                     {
-                        src: '/tmp/_nekumoBuild/node.js',
-                        dest: 'static/build/node.min.js'
-                    },
-                    {
-                        src: '/tmp/_nekumoBuild/base.js',
-                        dest: 'static/build/base.min.js'
+                        expand: true,
+                        src: '.tmp/concat/*.js',
+                        dest: 'static/build/'
                     }
                 ]
             }
         },
+        //Los CSS desde .tmp/concat/ se minifican y se llevan al directorio static/build/
         cssmin: {
             options: {
                 banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd HH:MM") %> */\n'
@@ -69,26 +59,36 @@ module.exports = function(grunt) {
             build: {
                 files: [
                     {
-                        src: readAsserts('templates/web/node.html', '"{{ nekumo_root' + ' }}/([^"}]+\.css)"'),
-                        dest: 'static/build/node.min.css'
-                    },
-                    {
-                        src: readAsserts('templates/web/base.html', '"{{ nekumo_root }}/([^"}]+\.css)"'),
-                        dest: 'static/build/base.min.css'
+                        expand: true,
+                        src: '.tmp/concat/*.css',
+                        dest: 'static/build/'
                     }
                 ]
             }
+        },
+        // Se borra el directorio .tmp creado por concat, _tmpBuild creado por nosotros, y
+        // static/build/.tmp usado por uglify.
+        clean: {
+            build: ['.tmp', '_tmpBuild', 'static/build/.tmp']
         }
     });
 
+    // Load the plugin that provides the "grunt-contrib-concat" task.
+    grunt.loadNpmTasks('grunt-contrib-concat');
+    // Load the plugin that provides the "grunt-text-replace" task.
+    grunt.loadNpmTasks('grunt-text-replace');
+    // Load the plugin that provides the "grunt-usemin" task.
+    grunt.loadNpmTasks('grunt-usemin');
     // Load the plugin that provides the "grunt-ng-annotate" task.
     grunt.loadNpmTasks('grunt-ng-annotate');
     // Load the plugin that provides the "uglify" task.
     grunt.loadNpmTasks('grunt-contrib-uglify');
     // Load the plugin that provides the "cssmin" task.
     grunt.loadNpmTasks('grunt-contrib-cssmin');
+    // Load the plugin that provides the "clean" task.
+    grunt.loadNpmTasks('grunt-contrib-clean');
 
     // Default task(s).
-    grunt.registerTask('default', ['ngAnnotate', 'uglify', 'cssmin']);
+    grunt.registerTask('default', ['replace', 'useminPrepare', 'concat', 'ngAnnotate', 'uglify', 'cssmin', 'clean']);
 
 };
