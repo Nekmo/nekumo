@@ -3,11 +3,13 @@
     <head>
         <title>Nekumo</title>
         <meta charset="utf-8">
+        <!-- build:css base-nekumo.min.css -->
         <link rel="stylesheet" href="{{ nekumo_root }}/static/src/web/libs/angular-material/angular-material.css">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=RobotoDraft:300,400,500,700,400italic">
         <link rel="stylesheet" href="{{ nekumo_root }}/static/src/web/css/base.css">
         <link href="{{ nekumo_root }}/static/src/web/libs/mdi/css/materialdesignicons.css"
               media="all" rel="stylesheet" type="text/css" />
+        <!-- endbuild -->
         <!-- TODO: Incluir RobotoDraft -->
         {% block css %}{% endblock %}
     </head>
@@ -79,6 +81,7 @@
     </script>
     {% endraw %}
     {% block js %}
+        <!-- build:js base-libs.min.js -->
         <script src="{{ nekumo_root }}/static/src/web/libs/jquery/dist/jquery.js"></script>
         <script src="{{ nekumo_root }}/static/src/web/libs/uuid-js/lib/uuid.js"></script>
         <script src="{{ nekumo_root }}/static/src/web/libs/angular/angular.js"></script>
@@ -93,14 +96,17 @@
         <script src="{{ nekumo_root }}/static/src/web/libs/sprintf/src/angular-sprintf.js"></script>
         <script src="{{ nekumo_root }}/static/src/web/libs/lodash/lodash.js"></script>
         <script src="{{ nekumo_root }}/static/src/web/own_libs/dialog-message/dialog-message.js"></script>
+        <!-- endbuild -->
         {% block extra_js_libs %}{% endblock %}
         <script>
             var app = angular.module('{{ ngApp | default("NekumoApp") }}', {{ angular_modules|default([])|tojson }});
             var websocket_path = '{{ websocket_path }}';
             var static_root = '{{ nekumo_root }}/static/'
         </script>
+        <!-- build:js base-nekumo.min.js -->
         <script src="{{ nekumo_root }}/static/src/web/js/ws.js"></script>
         <script src="{{ nekumo_root }}/static/src/web/js/base.js"></script>
+        <!-- endbuild -->
         {% block extra_js %}{% endblock %}
     {% endblock %}
 </html>
