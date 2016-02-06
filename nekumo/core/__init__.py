@@ -7,8 +7,9 @@ __author__ = 'nekmo'
 
 
 class Nekumo(object):
-    def __init__(self, directory):
+    def __init__(self, directory, debug=False):
         self.greenleets = []
+        self.debug = debug
         self.directory = directory
 
     def loop(self):
@@ -16,7 +17,7 @@ class Nekumo(object):
 
     def debug_server(self, server_name):
         server = get_module('nekumo.servers.%s.Server' % server_name)
-        server = server(self)
+        server = server(self, debug=self.debug)
         server.run()
 
     def start(self):
@@ -24,7 +25,7 @@ class Nekumo(object):
         if nekumo_debug_server is not None:
             self.debug_server(nekumo_debug_server)
         else:
-            greenleet = gevent.spawn(WebServer(self).run)
+            greenleet = gevent.spawn(WebServer(self, debug=self.debug).run)
             self.greenleets.append(greenleet)
         return self
 

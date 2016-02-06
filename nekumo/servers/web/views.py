@@ -33,7 +33,7 @@ def index(path='/'):
         return redirect(path + '/')
     elif node.type == 'file':
         return send_file(node(nekumo, path).get_path())
-    return render_template('web/node.html', angular_modules=modules)
+    return render_template('web/node.html', angular_modules=modules, debug=current_app.config['DEBUG'])
 
 
 @web_bp.route('%s/static/<path:path>' % NEKUMO_ROOT)

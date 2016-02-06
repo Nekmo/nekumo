@@ -1,14 +1,18 @@
 {% extends "web/base.html" %}
 {% block css %}
-    <!-- build:css node-nekumo.min.css -->
-    <link rel="stylesheet"
-          href="{{ nekumo_root }}/static/src/web/libs/angular-ui-notification/dist/angular-ui-notification.min.css">
-    <link rel="stylesheet"
-          href="{{ nekumo_root }}/static/src/web/libs/angular-ui-notification/dist/angular-ui-notification-extra.css">
-    <link rel="stylesheet" type="text/css" href="{{ nekumo_root }}/static/src/web/css/node.css">
-    <link rel="stylesheet"
-          type="text/css" href="{{ nekumo_root }}/static/src/web/libs/angular-material-data-table/dist/md-data-table.css">
-    <!-- endbuild -->
+    {% if debug %}
+        <!-- build:css node-nekumo.min.css -->
+        <link rel="stylesheet"
+              href="{{ nekumo_root }}/static/src/web/libs/angular-ui-notification/dist/angular-ui-notification.min.css">
+        <link rel="stylesheet"
+              href="{{ nekumo_root }}/static/src/web/libs/angular-ui-notification/dist/angular-ui-notification-extra.css">
+        <link rel="stylesheet" type="text/css" href="{{ nekumo_root }}/static/src/web/css/node.css">
+        <link rel="stylesheet" type="text/css"
+              href="{{ nekumo_root }}/static/src/web/libs/angular-material-data-table/dist/md-data-table.css">
+        <!-- endbuild -->
+    {% else %}
+        <link rel="stylesheet" href="{{ nekumo_root }}/static/build/node-nekumo.min.css">
+    {% endif %}
 {% endblock %}
 {% block content %}
     {% raw %}
@@ -275,17 +279,25 @@
     {% endraw %}
 {% endblock %}
 {% block extra_js_libs %}
-<!-- build:js node-libs.min.js -->
-<script src="{{ nekumo_root }}/static/src/web/libs/svg-morpheus/compile/unminified/svg-morpheus.js"></script>
-<script src="{{ nekumo_root }}/static/src/web/libs/angular-material-data-table/dist/md-data-table.js"></script>
-<script src="{{ nekumo_root }}/static/src/web/libs/angular-uuid4/angular-uuid4.js"></script>
-<script src="{{ nekumo_root }}/static/src/web/libs/moment/moment.js"></script>
-<script src="{{ nekumo_root }}/static/src/web/libs/angular-moment/angular-moment.js"></script>
-<script src="{{ nekumo_root }}/static/src/web/libs/angular-ui-notification/dist/angular-ui-notification.min.js"></script>
-<!-- endbuild -->
+    {% if debug %}
+        <!-- build:js node-libs.min.js -->
+        <script src="{{ nekumo_root }}/static/src/web/libs/svg-morpheus/compile/unminified/svg-morpheus.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/angular-material-data-table/dist/md-data-table.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/angular-uuid4/angular-uuid4.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/moment/moment.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/angular-moment/angular-moment.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/libs/angular-ui-notification/dist/angular-ui-notification.min.js"></script>
+        <!-- endbuild -->
+    {% else %}
+        <script src="{{ nekumo_root }}/static/build/node-libs.min.js"></script>
+    {% endif %}
 {% endblock %}
 {% block extra_js %}
-    <!-- build:js node-nekumo.min.js -->
-    <script src="{{ nekumo_root }}/static/src/web/js/node.js"></script>
-    <!-- endbuild -->
+    {% if debug %}
+        <!-- build:js node-nekumo.min.js -->
+        <script src="{{ nekumo_root }}/static/src/web/js/node.js"></script>
+        <!-- endbuild -->
+    {% else %}
+        <script src="{{ nekumo_root }}/static/build/node-nekumo.min.js"></script>
+    {% endif %}
 {% endblock %}
