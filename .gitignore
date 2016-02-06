@@ -5,4 +5,5 @@ __pycache__/
 *$py.class
 .idea
 .idea/*
+/nekumo/servers/web/static/src/web/libs
 node_modules
