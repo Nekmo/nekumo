@@ -136,7 +136,7 @@ class Management(object):
 
     def command_start(self, args):
         from nekumo.core import Nekumo
-        nekumo = Nekumo(args.directory)
+        nekumo = Nekumo(args.directory, debug=logging.DEBUG == args.loglevel)
         nekumo = nekumo.start()
         try:
             nekumo.loop()

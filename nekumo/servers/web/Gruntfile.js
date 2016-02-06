@@ -8,12 +8,21 @@ module.exports = function(grunt) {
         // retirarlo y hacerlo relativo para que usemin pueda encontrarlo y usarlo.
         // El destino será un directorio temporal llamado _tmpBuild
         replace: {
-            example: {
+            html: {
                 src: ['templates/*/*.html'],             // source files array (supports minimatch)
                 dest: '_tmpBuild/',             // destination directory or file
                 replacements: [{
                     from: '{{ nekumo_root }}/',                   // string replacement
                     to: '../'
+                }]
+            },
+            css: {
+                src: ['.tmp/concat/*.css'],             // source files array (supports minimatch)
+                // dest: '.tmp/contat/',             // destination directory or file
+                overwrite: true,
+                replacements: [{
+                    from: '../fonts/',                   // string replacement
+                    to: ''
                 }]
             }
         },
@@ -66,6 +75,15 @@ module.exports = function(grunt) {
                 ]
             }
         },
+        copy: {
+            fonts: {
+                files: [
+                    {flatten: true, expand: true, src: [
+                        'static/src/web/libs/mdi/fonts/*'
+                    ], dest: 'static/build/'}
+                ]
+            }
+        },
         // Se borra el directorio .tmp creado por concat, _tmpBuild creado por nosotros, y
         // static/build/.tmp usado por uglify.
         clean: {
@@ -85,10 +103,15 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-uglify');
     // Load the plugin that provides the "cssmin" task.
     grunt.loadNpmTasks('grunt-contrib-cssmin');
+    // Load the plugin that provides the "copy" task.
+    grunt.loadNpmTasks('grunt-contrib-copy');
     // Load the plugin that provides the "clean" task.
     grunt.loadNpmTasks('grunt-contrib-clean');
 
     // Default task(s).
-    grunt.registerTask('default', ['replace', 'useminPrepare', 'concat', 'ngAnnotate', 'uglify', 'cssmin', 'clean']);
+    grunt.registerTask('default', [
+        'replace:html', 'useminPrepare', 'concat', 'ngAnnotate', 'uglify', 'replace:css',
+        'cssmin', 'copy',  'clean'
+    ]);
 
 };
