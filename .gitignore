@@ -3,7 +3,8 @@
 __pycache__/
 *.py[cod]
 *$py.class
+build
 .idea
-.idea/*
 /nekumo/servers/web/static/src/web/libs
 node_modules
+/venv

@@ -1,6 +1,5 @@
 import os
 import gevent
-from nekumo.servers.web import WebServer
 from nekumo.utils.modules import get_module
 
 __author__ = 'nekmo'
@@ -25,6 +24,7 @@ class Nekumo(object):
         if nekumo_debug_server is not None:
             self.debug_server(nekumo_debug_server)
         else:
+            from nekumo.servers.web import WebServer
             greenleet = gevent.spawn(WebServer(self, debug=self.debug).run)
             self.greenleets.append(greenleet)
         return self

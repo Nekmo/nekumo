@@ -1,6 +1,6 @@
 Flask==0.10.1
 gevent==1.1rc3
--e hg+https://Nekmo@bitbucket.org/Nekmo/gevent-websocket@55a700dfc1171d0c4e8ac5abeeb77e8c427343a4#egg=gevent_websocket-dev
+-e git+https://github.com/Nekmo/gevent-websocket.git@python3-support#egg=gevent-websocket-0.9.5
 greenlet==0.4.9
 itsdangerous==0.24
 Jinja2==2.8

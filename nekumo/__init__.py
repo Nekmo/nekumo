@@ -1,5 +1,3 @@
-from nekumo.servers.web import WebServer
-
 __author__ = 'nekmo'
-
+__version__ = '0.1.0'
 # WebServer().run()
