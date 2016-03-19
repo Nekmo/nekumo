@@ -1,3 +1,4 @@
+
 /* Arreglos Material Tables */
 .mdDataTable td md-menu {
     button {
@@ -105,6 +106,163 @@ tr {
         input.md-input {
             margin-top: 6px;
             padding-left: 20px;
+        }
+    }
+}
+
+/* Preview files */
+#file-viewer {
+    //position: fixed;
+    //left: 0;
+    //right: 0;
+    //top: 0;
+    //bottom: 0;
+    //
+    //display: flex;
+    //justify-content: center;
+    //align-items: center;
+    //z-index: 60;
+
+
+    //position: fixed;
+    //width: 40%;
+    //z-index: 61;
+    //left: 20%;
+    //top: 20%;
+
+    z-index: 61;
+
+    // position: absolute;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    // -160 porque 320/2 = 160, que es el tamaño del panel derecho
+    margin-left: -160px;
+
+
+    file-viewer {
+        //width: 40%;
+        //z-index: 61;
+
+        #image-viewer {
+            img {
+                max-height: calc(100vh - 100px);
+                max-width: calc(100vw - 420px);
+            }
+        }
+
+        .ace_editor {
+            height: calc(100vh - 100px);
+            width: 800px
+        }
+
+
+        #default-viewer .card-media {
+            background: #999999;
+            color: snow;
+            font-size: 140px;
+            text-align: center;
+            margin-left: 10px;
+        }
+    }
+}
+
+#rightPanel {
+    position: fixed;
+
+    md-toolbar {
+        md-icon {
+            margin: 0;
+            margin-top: 2px;
+        }
+    }
+
+    md-card {
+        box-shadow: none;
+        .card-media {
+            text-align: center;
+
+            font-size: 100px;
+            color: snow;
+        }
+    }
+
+    #extended-info {
+        display: table;
+        width: 100%;
+        padding: 0;
+        font-size: 14px;
+        color: #4e4e4e;
+
+        li {
+            display: table-row;
+            span {
+                display: table-cell;
+                width: 50%;
+
+                &.key {
+                    text-align: right;
+                    padding-right: 10px;
+
+                    &::after {
+                        content: ':';
+                    }
+                }
+            }
+        }
+    }
+}
+
+#quick-start {
+    margin-bottom: 30px;
+
+    md-content.is-changed {
+        // padding-bottom: 0;
+
+        md-input-container {
+            margin-bottom: 0;
+        }
+    }
+
+    .ng-dirty {
+        color: #f5d135;
+    }
+
+    .subtitle {
+        font-size: 12px;
+        color: #dbdbdb;
+        a {
+            color: #b4c9ff;
+        }
+    }
+
+    .port-container {
+        margin-right: 30px;
+    }
+
+    [name=address] {
+        width: 140px;
+    }
+
+    [name=port] {
+        width: 80px;
+    }
+
+    .close-button {
+        height: 48px;
+    }
+
+    md-icon {
+        font-size: 32px;
+        margin-right: 15px;
+        height: 32px;
+
+        &.settings {
+
+        }
+        &.close {
+            color: #ff0000;
         }
     }
 }

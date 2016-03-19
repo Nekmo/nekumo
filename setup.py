@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-"""Package description
+"""Nekumo. Access your files from anywhere.
 """
 from setuptools import setup, find_packages
 from pip.req import parse_requirements
@@ -286,8 +286,7 @@ for version in range(2, 4):
         python_versions.append('%i :: Only' % version)
         break
 CLASSIFIERS.extend(['Programming Language :: Python :: %s' % version for version in python_versions])
-print(dependency_links)
-print(install_requires)
+
 setup(
     name=PACKAGE_NAME,
     version=package_version,

@@ -2,24 +2,28 @@ import os
 from flask import Flask, request
 from gevent.pywsgi import WSGIServer
 import werkzeug.serving
+import werkzeug.wrappers
+import werkzeug.routing
 from werkzeug.debug import DebuggedApplication
+
+from config import WebConfig
 from geventwebsocket.handler import WebSocketHandler
 
 __author__ = 'nekmo'
 
 NEKUMO_ROOT = '/.nekumo'
 WEBSOCKET_PATH = os.path.join(NEKUMO_ROOT, 'ws')
-ANGULAR_MODULES = ['ngWebSocket', 'ngMaterial', 'ngMdIcons', 'mdColors', 'mdDialogMessage']
+ANGULAR_MODULES = ['ngWebSocket', 'ngMaterial', 'ngMdIcons', 'mdColors', 'mdDialogMessage', 'ngSanitize',
+                   'oc.lazyLoad']
 
 
-def get_app_flask(name=None, debug=False, flask_class=Flask):
-    if name is None:
-        name = __name__
-    print(name)
-    app = flask_class(name)
-    app.debug = debug
-    return app
+# PATCH: Hay una función en werkzeug (wsgi_decoding_dance en _compat) que intenta reconvertir la url
+# de forma incorrecta. Debe devolverse tal cual.
+def _wsgi_decoding_dance(s, charset='utf-8', errors='replace'):
+    return s
 
+setattr(werkzeug.wrappers, 'wsgi_decoding_dance', _wsgi_decoding_dance)
+setattr(werkzeug.routing, 'wsgi_decoding_dance', _wsgi_decoding_dance)
 
 class NekumoHandler(WebSocketHandler, werkzeug.serving.WSGIRequestHandler):
     log_request = werkzeug.serving.WSGIRequestHandler.log_request
@@ -45,15 +49,17 @@ class WebServer(object):
     # más adelante.
     app = None
 
-    def __init__(self, nekumo, port=8000, debug=True):
+    def __init__(self, nekumo, address_port=('0.0.0.0', 7070), debug=True):
         # debug = False
         self.nekumo = nekumo
-        self.port = port
+        self.address = address_port[0]
+        self.port = address_port[1]
         self.debug = debug
         self.app = self.get_app_flask(debug=debug)
         self.app.nekumo = self.nekumo
         self.app.web_server = self
         self.set_up_flask()
+        self.config = WebConfig(os.path.join(self.nekumo.config_dir, 'servers', 'web',  'config.json'))
 
     def set_up_flask(self):
         self.update_globals(self.default_globals)
@@ -70,13 +76,15 @@ class WebServer(object):
             name = __name__
         app = flask_class(name)
         app.debug = debug
+        import binascii
+        app.secret_key = binascii.hexlify(os.urandom(24))
         return app
 
     def _run(self):
         app = DebuggedWSApplication(self.app, True) if self.app.debug else self.app
         # self.app.logger.info('app starting up....')
         self.server = WSGIServer(
-            ('', self.port),
+            (self.address, self.port),
             app,
             # handler_class=NekumoHandler
             handler_class=WebSocketHandler

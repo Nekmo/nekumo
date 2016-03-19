@@ -16,12 +16,84 @@
 {% endblock %}
 {% block content %}
     {% raw %}
-        <main class="container" ng-controller="Nodes">
+        <main class="container" ng-controller="Nodes" ng-cloak>
+            <div layout="row" layout-align="center" ng-controller="quickStart" id="quick-start" ng-if="isAdmin">
+                <section layout="column" class="md-inline-form layout-max-width md-whiteframe-z1"
+                          md-theme="blue-world">
+                    <md-toolbar class="radius-toolbar">
+                        <div class="md-toolbar-tools">
+                            <md-icon class="mdi mdi-settings settings"></md-icon>
+                            <div>
+                                <h2>
+                                    <span>Bienvenido, administrador</span>
+                                </h2>
+                                <h3 class="subtitle">
+                                    <span>Configuración rápida de Nekumo.
+                                        <a href="#">¿Por qué estoy viendo esto?</a></span>
+                                </h3>
+                            </div>
+
+                            <span flex></span>
+                            <md-button aria-label="Close" class="close-button md-icon-button">
+                                <md-icon class="mdi mdi-close close"></md-icon>
+                            </md-button>
+                        </div>
+                    </md-toolbar>
+                    <form name="quick-start">
+                        <md-content md-theme="dark-theme" layout-gt-sm="row" layout-padding
+                                    ng-class="{'is-changed': isChanged}">
+                            <div layout="row" class="layout-row">
+                                <md-input-container>
+                                    <label>Disponible en</label>
+                                    <md-select ng-model="data.availability" ng-change="fieldChange('network');">
+                                        <md-option ng-repeat="availabilityOption in availabilityOptions"
+                                                   value="{{ availabilityOption.id }}">
+                                            {{ availabilityOption.name }}
+                                        </md-option>
+                                    </md-select>
+                                </md-input-container>
+                                <md-input-container>
+                                    <label>Con dirección</label>
+                                    <input ng-model="data.address" name="address" ng-change="fieldChange('network');">
+                                </md-input-container>
+                                <md-input-container class="port-container">
+                                    <label>Puerto</label>
+                                    <input ng-model="data.port" type="number" ng-pattern="/^[0-9]{1,5}$/"
+                                           ng-maxlength="5" name="port" ng-change="fieldChange('network');">
+                                </md-input-container>
+                                <md-input-container>
+                                    <label>Permisos admin.</label>
+                                    <md-select ng-model="data.admin_availability" ng-change="fieldChange('network');">
+                                        <md-option ng-repeat="adminAvailabilityOption in adminAvailabilityOptions"
+                                                   value="{{ adminAvailabilityOption.id }}">
+                                            {{ adminAvailabilityOption.name }}
+                                        </md-option>
+                                    </md-select>
+                                </md-input-container>
+                                <md-input-container>
+                                    <label>Permisos anónimos</label>
+                                    <md-select ng-model="data.anonymous_perms" ng-change="fieldChange('network');">
+                                        <md-option ng-repeat="anonymousPerms in anonymousPermsOptions"
+                                                   value="{{ anonymousPerms.id }}">
+                                            {{ anonymousPerms.name }}
+                                        </md-option>
+                                    </md-select>
+                                </md-input-container>
+                            </div>
+                        </md-content>
+                        <md-content md-theme="dark-theme" layout-gt-sm="row" layout-padding ng-if="isChanged">
+                            <div layout="row" class="layout-row">
+                                <md-button class="md-raised md-primary" ng-click="save()">Guardar y aplicar</md-button>
+                            </div>
+                        </md-content>
+                    </form>
+                </section>
+            </div>
             <div layout="row" layout-align="center">
                 <ol class="breadcrumb layout-max-width">
                     <li>
                         <a href="/" ng-if="breadcrumb_nodes.length"
-                           ng-click="go_to('/'); $event.preventDefault()">
+                           ng-click="goTo('/'); $event.preventDefault()">
                             <span class="label label-primary md-default-theme md-primary md-hue-2 md-bg">Raíz</span>
                         </a>
                         <span class="label label-default" ng-if="!breadcrumb_nodes
@@ -31,7 +103,7 @@
                         <a href="{{ '../' + _.repeat('../', breadcrumb_nodes.length - $index - 1) + node + '/' }}"
                            ng-if="!$last"
                            class="md-default-theme md-accent md-fg"
-                           ng-click="go_to('../' + _.repeat('../', breadcrumb_nodes.length - $index - 1) + node + '/',
+                           ng-click="goTo('../' + _.repeat('../', breadcrumb_nodes.length - $index - 1) + node + '/',
                            $event)">
                             {{ node | decodeURIComponent }}</a>
                         <span ng-if="$last">{{ node | decodeURIComponent }}</span>
@@ -51,9 +123,7 @@
                     <md-toolbar class="md-table-toolbar alternate" ng-show="selected.length">
                         <div class="md-toolbar-tools" layout-align="space-between">
                             <div>{{selected.length}} {{selected.length > 1 ? 'items' : 'item'}} selected</div>
-                            <md-button class="md-icon-button" ng-click="delete($event)">
-                                <md-icon class="mdi mdi-delete"></md-icon>
-                            </md-button>
+                            <nekumo-node-menu></nekumo-node-menu>
                         </div>
                     </md-toolbar>
 
@@ -85,10 +155,17 @@
                                                 options='{"duration": 375, "rotation": "none"}'></ng-md-icon>
                                 </td>
                                 <td md-cell>
-                                    <a href="{{ node.get_relative_path() }}" class="md-default-theme md-accent md-fg"
-                                       ng-click="(node.type == 'dir' ? go_to(
+                                    <!-- TODO: hacer que goTo acepte como argumento node, para redirigir al archivo
+                                    (preview) -->
+                                    <!-- <a href="{{ node.get_relative_path() }}" class="md-default-theme md-accent
+                                    md-fg"
+                                       ng-click="(node.type == 'dir' ? goTo(
                                                                      node.get_relative_path(), $event) :
                                                                      $event.stopPropagation()) ">
+                                        {{ node.name }}
+                                    </a> -->
+                                    <a href="{{ node.get_relative_path() }}" class="md-default-theme md-accent md-fg"
+                                       ng-click="goTo(node, $event);">
                                         {{ node.name }}
                                     </a>
                                 </td>
@@ -146,6 +223,50 @@
                         </md-button>
                     </div>
                 </md-card>
+
+                <!-- TODO: sidebar -->
+                <md-sidenav class="md-sidenav-right md-whiteframe-z2" md-component-id="right"
+                            md-is-open="isRightPanelOpen" id="rightPanel">
+                    <md-toolbar class="md-theme-light">
+                        <h1 class="md-toolbar-tools">
+                            <md-icon class="mdi mdi-information" icon="information"></md-icon>
+                            Información
+                        </h1>
+                    </md-toolbar>
+                    <md-content ng-controller="RightPanelCtrl" ng-if="_previewFile.node">
+                        <md-card>
+                            <md-card-title>
+                                <md-card-title-text>
+                                    <span class="md-headline">{{ getMimetypeTitle() }}</span>
+                                    <span class="md-subhead">
+                                        <div>
+                                            <span am-time-ago="_previewFile.node.mtime" am-preprocess="unix"></span>
+                                            <md-tooltip md-direction="top">
+                                                {{ (_previewFile.node.mtime * 1000) | amDateFormat:'dddd, MMMM Do YYYY, h:mm:ss a' }}
+                                            </md-tooltip>
+                                        </div>
+                                    </span>
+                                    <span class="md-subhead">Tamaño: {{ _previewFile.node.size | bytes }}</span>
+                                </md-card-title-text>
+                                <md-card-title-media>
+                                    <div class="md-media-md card-media" ng-style="{'background': getIconColor()}">
+                                        <span class="mdi mdi-{{ getIcon() }}"></span>
+                                    </div>
+                                </md-card-title-media>
+                            </md-card-title>
+                        </md-card>
+                        <ul id="extended-info">
+                            <li ng-repeat="info_line in extendedInfo">
+                                <span class="key">{{ info_line.description }}</span>
+                                <span class="value">{{ info_line.values.join(', ') }}</span>
+                            </li>
+                        </ul>
+                    </md-content>
+                </md-sidenav>
+            </div>
+
+            <div ng-if="isOpenRight()" id="file-viewer">
+                <file-viewer node="_previewFile.node"></file-viewer>
             </div>
         </main>
     {% endraw %}
@@ -182,13 +303,15 @@
                                     </md-button>
                                 </md-input-container>
                                 <md-input-container>
-                                    <md-button ng-click="ignore(node.orig);">
+                                    <md-button ng-click="ignore(node.orig);"
+                                               ng-disabled="node.dest_node.orig_name != node.dest_node.name">
                                         <md-icon class="mdi mdi-exit-to-app" icon="exit-to-app"></md-icon>
                                         Ignorar
                                     </md-button>
                                 </md-input-container>
                                 <md-input-container>
-                                    <md-button ng-click="override(node.orig, node.dest_node);">
+                                    <md-button ng-click="override(node.orig, node.dest_node);"
+                                               ng-disabled="node.dest_node.orig_name != node.dest_node.name">
                                         <md-icon class="mdi mdi-weight-kilogram" icon="weight-kilogram">
                                         </md-icon>
                                         Sobrescribir
@@ -201,16 +324,86 @@
                 <div class="md-actions" layout="row">
                     <span flex></span>
                     <md-button style="margin-right:20px;" ng-click="ignoreAll();">
+                        <!--
+                        <md-tooltip md-direction="top">Pulse aquí para no hacer nada con los archivos que ya existen con
+                            nombres repetidos (ahora y durante esta operación).</md-tooltip>
+                        -->
                         <md-icon class="mdi mdi-exit-to-app" icon="exit-to-app"></md-icon>
                         Ignorar siempre
                     </md-button>
                     <md-button style="margin-right:20px;" ng-click="overrideAll();">
+                        <!--
+                        <md-tooltip md-direction="top">Use este botoón para sobrescribir todos los archivos que
+                            ya existiesen con el mismo nombre en la operación (ahora, y duranta esta operación).
+                        </md-tooltip>
+                        -->
                         <md-icon class="mdi mdi-weight-kilogram" icon="weight-kilogram"></md-icon>
                         Sobrescribir siempre
                     </md-button>
                 </div>
             </form>
         </md-dialog>
+    </script>
+
+    <!-- <script type="text/ng-template" id="nekumo/file-viewer-load.tmpl.html">
+        <file-viewer></file-viewer>
+    </script> -->
+
+    <script type="text/ng-template" id="nekumo/file-viewer.tmpl.html">
+        <div ng-switch="viewer">
+            <videogular vg-theme="config.theme" ng-switch-when="video">
+                <vg-media vg-src="config.sources"
+                        vg-tracks="config.tracks">
+                </vg-media>
+
+                <vg-controls vg-autohide="config.plugins.controls.autoHide"
+                             vg-autohide-time="config.plugins.controls.autoHideTime">
+                    <vg-play-pause-button></vg-play-pause-button>
+                    <vg-time-display>{{ currentTime | date:'mm:ss':'+0000' }}</vg-time-display>
+                    <vg-scrub-bar>
+                        <vg-scrub-bar-current-time></vg-scrub-bar-current-time>
+                    </vg-scrub-bar>
+                    <vg-time-display>{{ timeLeft | date:'mm:ss':'+0000' }}</vg-time-display>
+                    <vg-time-display>{{ totalTime | date:'mm:ss':'+0000' }}</vg-time-display>
+                    <vg-volume>
+                        <vg-mute-button></vg-mute-button>
+                        <vg-volume-bar></vg-volume-bar>
+                    </vg-volume>
+                    <vg-playback-button></vg-playback-button>
+                    <vg-fullscreen-button></vg-fullscreen-button>
+                </vg-controls>
+            </videogular>
+            <div ng-switch-when="image" id="image-viewer">
+                <img ng-src="{{ src.node }}" alt="{{ src.name }}">
+            </div>
+            <md-card ng-switch-when="text">
+                <div ui-ace="{
+                  useWrapMode : true,
+                  showGutter: false,
+                  theme:'twilight',
+                  mode: 'xml',
+                  firstLineNumber: 1,
+                  onLoad: aceLoaded,
+                  onChange: aceChanged
+                }" ng-model="text"></div>
+            </md-card>
+            <md-card ng-switch-default id="default-viewer">
+                <md-card-title>
+                  <md-card-title-text>
+                    <span class="md-headline">Sin previsualización</span>
+                    <span class="md-subhead">Descarga el archivo para poder visualizarlo.</span>
+                  </md-card-title-text>
+                  <md-card-title-media>
+                    <div class="md-media-lg card-media">
+                        <span class="mdi mdi-file"></span>
+                    </div>
+                  </md-card-title-media>
+                </md-card-title>
+                <md-card-actions layout="row" layout-align="end center" ng-click="download()">
+                  <md-button>Descargar ahora</md-button>
+                </md-card-actions>
+            </md-card>
+        </div>
     </script>
 
     <script type="text/ng-template" id="nekumo/menu-node.tmpl.html">
@@ -243,7 +436,7 @@
                     </md-button>
                 </md-menu-item>
                 <md-menu-divider></md-menu-divider>
-                <md-menu-item ng-if="cut_copy_action != ''">
+                <md-menu-item ng-if="Nodes.cut_copy_action != ''">
                     <md-button ng-click="set_menu_right_node(null); menuCtrl.paste(node, $event)" class="md-primary">
                         <md-icon class="mdi mdi-content-paste" md-menu-align-target icon="content-paste">
                         </md-icon>
@@ -251,7 +444,7 @@
                     </md-button>
                 </md-menu-item>
                 <md-menu-item>
-                    <md-button ng-disabled="cut_copy_action != ''" ng-click="menuCtrl.copy(node, $event)">
+                    <md-button ng-disabled="Nodes.cut_copy_action != ''" ng-click="menuCtrl.copy(node, $event)">
                         <md-icon class="mdi mdi-content-copy" md-menu-align-target icon="content-copy">
                         </md-icon>
                         Copiar
@@ -259,7 +452,7 @@
                 </md-menu-item>
                 <md-menu-item>
                     <md-button ng-click="set_menu_right_node(null); menuCtrl.cut(node, $event)"
-                               ng-disabled="cut_copy_action != ''">
+                               ng-disabled="Nodes.cut_copy_action != ''">
                         <md-icon class="mdi mdi-content-cut" md-menu-align-target icon="content-cut">
                         </md-icon>
                         Cortar

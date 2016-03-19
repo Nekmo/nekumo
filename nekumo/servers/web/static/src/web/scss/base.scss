@@ -71,6 +71,17 @@ md-menu-item md-icon.mdi {
     outline: 0; // Chromium añade una línea en todos los elementos como inputs bajo focus
 }
 
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    /* display: none; <- Crashes Chrome on hover */
+    -webkit-appearance: none;
+    margin: 0; /* <-- Apparently some margin are still there even though it's hidden */
+}
+
+input[type=number], md-input-container input[type=number] {
+    -moz-appearance:textfield;
+}
+
 body {
     background: #eee;
     // position: fixed;
@@ -92,6 +103,16 @@ a {
     position: absolute;
     top: 0;
     float: left;
+}
+
+md-input-container.md-dark-theme-theme label {
+    text-shadow: none;
+}
+
+/* Añadidos para Angular Material */
+.radius-toolbar {
+    border-radius: 3px 3px 0 0;
+    box-shadow: 0 1px rgba(255, 255, 255, 0.1);
 }
 
 /* Cabecera */

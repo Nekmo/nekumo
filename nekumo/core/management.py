@@ -15,10 +15,10 @@ execution_directory = os.path.abspath('.')
 nekumo_config_directory = os.path.join(execution_directory, '.nekumo')
 
 DEFAULT_ADDRESS = '0.0.0.0'
-DEFAULT_PORT = '8000'
+DEFAULT_PORT = '7070'
 
 
-def port_address(value):
+def address_port(value):
     value = value.split(':')
     if len(value) > 2:
         raise ValueError('Please, use only one separator (":").')
@@ -67,7 +67,7 @@ class Management(object):
                             default=nekumo_config_directory)
         parser.add_argument('-d', '--directory', help='Directory to serve.',
                             default=execution_directory)
-        parser.add_argument('port_address', help='Port or Address:Port', type=port_address, nargs='?',
+        parser.add_argument('address_port', help='Port or Address:Port', type=address_port, nargs='?',
                             default='{0}:{1}'.format(DEFAULT_ADDRESS, DEFAULT_PORT))
         # parser.sub = parser.add_subparsers()
         # Subcommand Create config directory
@@ -136,7 +136,8 @@ class Management(object):
 
     def command_start(self, args):
         from nekumo.core import Nekumo
-        nekumo = Nekumo(args.directory, debug=logging.DEBUG == args.loglevel)
+        config = os.path.join(args.directory, '.nekumo')
+        nekumo = Nekumo(args.directory, args.address_port, config, debug=logging.DEBUG == args.loglevel)
         nekumo = nekumo.start()
         try:
             nekumo.loop()

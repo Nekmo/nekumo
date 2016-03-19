@@ -100,6 +100,10 @@
             <script src="{{ nekumo_root }}/static/src/web/libs/sprintf/src/sprintf.js"></script>
             <script src="{{ nekumo_root }}/static/src/web/libs/sprintf/src/angular-sprintf.js"></script>
             <script src="{{ nekumo_root }}/static/src/web/libs/lodash/lodash.js"></script>
+            <script src="{{ nekumo_root }}/static/src/web/libs/angular-sanitize/angular-sanitize.js"></script>
+
+            <script src="{{ nekumo_root }}/static/src/web/libs/oclazyload/dist/ocLazyLoad.js"></script>
+
             <script src="{{ nekumo_root }}/static/src/web/own_libs/dialog-message/dialog-message.js"></script>
             <!-- endbuild -->
         {% else %}
@@ -109,7 +113,8 @@
         <script>
             var app = angular.module('{{ ngApp | default("NekumoApp") }}', {{ angular_modules|default([])|tojson }});
             var websocket_path = '{{ websocket_path }}';
-            var static_root = '{{ nekumo_root }}/static/'
+            var static_root = '{{ nekumo_root }}/static/';
+            var isAdmin = {{ is_admin|tojson }};
         </script>
         {% if debug %}
             <!-- build:js base-nekumo.min.js -->

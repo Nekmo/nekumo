@@ -13,6 +13,8 @@ class Encoder(json.JSONEncoder):
             return obj.execute()
         if isinstance(obj, NekumoException):
             return obj.serialize()
+        if isinstance(obj, bytes):
+            return obj.decode('utf-8')
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
 

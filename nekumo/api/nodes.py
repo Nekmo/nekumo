@@ -2,10 +2,14 @@
 import mimetypes
 import os
 import shutil
+
+from hachoir.metadata import extractMetadata
+from hachoir.parser import createParser
+
 from nekumo.api.base import API, Response
 from nekumo.api.decorators import method
 from nekumo.core.exceptions import InvalidNode
-from nekumo.utils.nodes import clear_end_path, clear_start_path
+from nekumo.utils.nodes import clear_end_path
 from nekumo.utils.filesystem import copytree
 
 __author__ = 'nekmo'
@@ -37,10 +41,14 @@ class Node(API):
         return clear_end_path(self.node).split('/')[-1]
 
     @method
-    def move(self, dest):
+    def move(self, dest, override=False):
+        # TODO: renombrar override como "overwrite".
         path = self.get_path()
-        name = self.get_name()
-        shutil.move(path, os.path.join(dest, name))
+        dest = self.get_path(dest, False)
+        # name = self.get_name()
+        # TODO overwrite: http://stackoverflow.com/questions/31813504/move-and-replace-if-same-file-name-already-existed
+        # -in-python
+        shutil.move(path, dest)
 
     @method
     def info(self):
@@ -63,6 +71,10 @@ class Node(API):
             info = Response(self, node=self.node)
         info.update({'status': status or self.status, 'end': end or self.end})
         return info
+
+    @method
+    def extended_info(self):
+        return []
 
 
 class Dir(Node):
@@ -135,3 +147,27 @@ class File(Node):
     @method
     def rm(self):
         os.remove(self.get_path())
+
+    @method
+    def extended_info(self):
+        parser = createParser(self.get_path())
+        if parser is None:
+            return []
+        try:
+            metadata = extractMetadata(parser)
+        except Exception as err:
+            metadata = None
+        if metadata is None:
+            return []
+        info = map(lambda x: {'description': x.description, 'values': [val.text for val in x.values]},
+                   filter(lambda y: y.values, metadata._Metadata__data.values()))
+        return Response(self, info=info)
+
+
+
+class Image(File):
+    @staticmethod
+    def is_capable(stanza):
+        # TODO: hacer esto más eficiente
+        return os.path.isfile(stanza.get_path()) and \
+               (mimetypes.guess_type(stanza.get_path())[0] or '').startswith('image/')

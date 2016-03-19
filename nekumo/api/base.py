@@ -44,8 +44,8 @@ class API(RegisteringBase):
             raise InvalidStanza('Method is required.')
         params = self.params or {}
         method = getattr(self, self.method, None)
-        if self.method is None:
-            raise InvalidStanza('Invalid method')
+        if method is None:
+            raise InvalidStanza('Invalid method \'{}\''.format(self.method), self.id)
         try:
             response = method(**params)
         except NekumoException as e:
@@ -118,6 +118,8 @@ class API(RegisteringBase):
         # Selección dinámica del objeto de API a usar en función del nodo.
         from nekumo.api import stanza_classes
         for stanza_class in stanza_classes:
+            # TODO: para cachear, en stanza debería haber un atrribute _cache con aquellos
+            # valores obtenidos, como mimetype, etc.
             if stanza_class.is_capable(stanza):
                 return stanza_class
         if stanza.method == 'exists':

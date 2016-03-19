@@ -1,23 +1,51 @@
 
 
 var ICONS = {
-    'inode/directory': {'icon': 'folder', 'color': '#17b5f9'},
-    'text': {'icon': 'description', 'color': '#de3641'},
-    'video': {'icon': 'movie', 'color': '#004d40'},
-    'audio/ogg': {'icon': 'file-formats-icons-ogg'},
-    'image/jpeg': {'icon': 'file-formats-icons-jpg3'},
-    'image/png': {'icon': 'file-formats-icons-png3'},
-    'application/zip': {'icon': 'file-formats-icons-zip6'},
-    'audio/mpeg': {'icon': 'file-formats-icons-mp36'},
-    'application/x-javascript': {'icon': 'file-formats-icons-js2'},
-    'text/x-python': {'icon': 'file-formats-icons-python3'},
-    'application/pdf': {'icon': 'file-formats-icons-pdf19'},
-    'application/x-rar-compressed': {'icon': 'file-formats-icons-rar2'},
-    'application/x-bittorrent': {'icon': 'file-formats-icons-torrent'},
-    'text/css': {'icon': 'file-formats-icons-css5'},
-    'text/html': {'icon': 'file-formats-icons-html9'},
-    null: {'icon': 'help', 'style': 'padding-left: 2px;'}
+    'inode/directory': {'icon': 'folder', 'color': '#17b5f9', xicon: 'folder'},
+    'text': {'icon': 'description', 'color': '#ffd11a', xicon: 'file-document'},
+    'video': {'icon': 'movie', 'color': '#004d40', xicon: 'movie'},
+    'image': {'icon': 'image', 'color': '#de3641', xicon: 'image'},
+    //'audio/ogg': {'icon': 'file-formats-icons-ogg'},
+    //'image/jpeg': {'icon': 'file-formats-icons-jpg3'},
+    //'image/png': {'icon': 'file-formats-icons-png3'},
+    //'application/zip': {'icon': 'file-formats-icons-zip6'},
+    //'audio/mpeg': {'icon': 'file-formats-icons-mp36'},
+    //'application/x-javascript': {'icon': 'file-formats-icons-js2'},
+    //'text/x-python': {'icon': 'file-formats-icons-python3'},
+    //'application/pdf': {'icon': 'file-formats-icons-pdf19'},
+    //'application/x-rar-compressed': {'icon': 'file-formats-icons-rar2'},
+    //'application/x-bittorrent': {'icon': 'file-formats-icons-torrent'},
+    //'text/css': {'icon': 'file-formats-icons-css5'},
+    //'text/html': {'icon': 'file-formats-icons-html9'},
+    null: {'icon': 'help', 'color': '#999999', 'style': 'padding-left: 2px;', xicon: 'help-circle'}
 };
+
+var MIMETYPES_VIEWERS = {
+    'application/xml': 'text',
+    'text': 'text',
+    'video': 'video',
+    'image': 'image'
+};
+
+var MIMETYPES_TITLES = {
+    'video': 'Vídeo',
+    'image': 'Imagen',
+    'text': 'Texto',
+    null: 'Desconocido'
+};
+
+function get_mimetype_value(dict, mimetype){
+    mimetype = mimetype || '';
+    var value = dict[mimetype];
+    if(!value) {
+        var type = mimetype.split('/')[0];
+        value = dict[type];
+    }
+    if(!value){
+        value = dict[null];
+    }
+    return value
+}
 
 function ProgrammingError(message) {
    this.message = message;
@@ -78,6 +106,15 @@ app.config(function ($mdThemingProvider) {
         .accentPalette('blue')
         .warnPalette('red');
         // .backgroundPalette('background')
+
+    $mdThemingProvider.theme('blue-world')
+              .primaryPalette("blue")
+              .accentPalette('green')
+              .warnPalette('red');
+
+    $mdThemingProvider.theme('dark-theme', 'default')
+      .primaryPalette('yellow')
+      .dark();
 });
 
 
@@ -89,6 +126,10 @@ app.factory('Node', function(WebSocket){
 
         self.__init__ = function(){
             self.node = self.get_node();
+        };
+
+        if(_.isString(data)){
+            data = {'node': data};
         };
 
         $.each(data, function(key, value){
@@ -150,8 +191,23 @@ app.factory('Node', function(WebSocket){
             WebSocket.get({'method': 'count', 'node': self.get_node()}).then(success, error, complete);
         };
 
+        self.extended_info = function(success, error, complete){
+            WebSocket.get({'method': 'extended_info', 'node': self.get_node()}).then(success, error, complete);
+        };
+
         self.rm = function(success, error, complete){
             WebSocket.get({'method': 'rm', 'node': self.get_node()}).then(success, error, complete);
+        };
+
+        self.execute = function(method, data, success, error, complete){
+            if(!(success) && _.isFunction(data)){
+                success = data;
+                data = null;
+            }
+            data = data || {};
+            data['method'] = method;
+            data['node'] = self.get_node();
+            WebSocket.get(data).then(success, error, complete);
         };
 
         self.get_icon = function(){
@@ -255,11 +311,13 @@ app.directive('nekumoNodeMenu', function($rootScope, $timeout){
         },
         templateUrl: 'nekumo/menu-node.tmpl.html',
         link: function(scope){
+            scope.Nodes = scope.$parent.Nodes;
+
             scope.open_menu = function($mdOpenMenu, ev) {
                 // TODO: menu_right
                 if(scope.node && !(scope.node.selected)){
                     scope.node.select();
-                    scope.menu_right_node = scope.node;
+                    scope.$parent.menu_right_node = scope.node;
                 }
                 $mdOpenMenu(ev);
 
@@ -270,12 +328,12 @@ app.directive('nekumoNodeMenu', function($rootScope, $timeout){
                         // el menú por tocar otra parte de la pantalla. Por ello, pongo un timeout, para que dé
                         // tiempo a que se inicie la ejecución del método seleccionado en el menú.
                         // TODO:
-                        if($scope.menu_right_node == null){
+                        if(scope.$parent.menu_right_node == null){
                             return
                         }
-                        console.debug('Deseleccionar ' + $scope.menu_right_node);
-                        $scope.menu_right_node.unselect();
-                        $scope.menu_right_node = null;
+                        console.debug('Deseleccionar ' + scope.$parent.menu_right_node);
+                        scope.$parent.menu_right_node.unselect();
+                        scope.$parent.menu_right_node = null;
                     }, 50);
                 });
             };
@@ -290,12 +348,192 @@ app.directive('nekumoNodeMenu', function($rootScope, $timeout){
     }
 });
 
+//app.config(['$loadOnDemandProvider', function ($loadOnDemandProvider) {
+//   var modules = [
+//       {
+//           name: 'com.2fdevs.videogular',     // name of module
+//           script: '/static/src/web/libs/videogular/videogular.js', // path to javascript file
+//           template: "/static/src/web/templates/file-viewer-load.tmpl.html"
+//       }
+//   ];
+//   $loadOnDemandProvider.config(modules);
+//}]);
+
+
+app.config(['$ocLazyLoadProvider', function ($ocLazyLoadProvider) {
+    $ocLazyLoadProvider.config({
+      modules: [{
+          name: 'Videogular',
+          files: [
+              '/static/src/web/libs/videogular/videogular.js',
+              '/static/src/web/libs/videogular-controls/vg-controls.js'
+          ]
+      },
+      {
+          name: 'Ace',
+          files: [
+              '/static/src/web/libs/ace-builds/src-min-noconflict/ace.js',
+              '/static/src/web/libs/angular-ui-ace/ui-ace.js'
+              //'/static/src/web/libs/highlightjs/highlight.pack.js',
+              //'/static/src/web/libs/angular-highlightjs/angular-highlightjs.js'
+              // '/static/src/web/libs/videogular-controls/vg-controls.js'
+          ]
+      }
+      ]
+    });
+}]);
+
+app.directive('fileViewer', function($sce, $ocLazyLoad, $compile, $http, $window){
+    return {
+        scope: {
+            node: '='
+        },
+        templateUrl: 'nekumo/file-viewer.tmpl.html',
+        link: function (scope, elem) {
+
+            var moduleGroup = null;
+            var mimetype = scope.node.mimetype || '';
+            scope.viewer = MIMETYPES_VIEWERS[mimetype];
+            if(!scope.viewer) {
+                var type = mimetype.split('/')[0];
+                scope.viewer = MIMETYPES_VIEWERS[type];
+            }
+            if(scope.viewer == 'video') {
+                //$ocLazyLoad.load('Videogular').then(function () {
+                //    $compile(elem.children())(scope);
+                //});
+                moduleGroup = 'Videogular';
+
+                scope.config = {
+                    sources: [
+                        {src: $sce.trustAsResourceUrl(scope.node.node), type: scope.node.mimetype}
+                        //{src: $sce.trustAsResourceUrl("http://static.videogular.com/assets/videos/videogular.mp4"), type: "video/mp4"},
+                        //{src: $sce.trustAsResourceUrl("http://static.videogular.com/assets/videos/videogular.webm"), type: "video/webm"},
+                        //{src: $sce.trustAsResourceUrl("http://static.videogular.com/assets/videos/videogular.ogg"), type: "video/ogg"}
+                    ],
+                    //tracks: [
+                    //    {
+                    //        src: "http://www.videogular.com/assets/subs/pale-blue-dot.vtt",
+                    //        kind: "subtitles",
+                    //        srclang: "en",
+                    //        label: "English",
+                    //        default: ""
+                    //    }
+                    //],
+                    theme: "/static/src/web/libs/videogular-themes-default/videogular.css",
+                    plugins: {
+                        controls: {
+                            autoHide: true,
+                            autoHideTime: 5000
+                        }
+                        //poster: "http://www.videogular.com/assets/images/videogular.png"
+                    }
+                };
+            } else if(scope.viewer == 'image'){
+                scope.src = scope.node;
+            } else if(scope.viewer == 'text'){
+                $http.get(scope.node.node).then(function(response){
+                    scope.text = response.data;
+
+                    $ocLazyLoad.load('Ace').then(function () {
+                        $compile(elem.children())(scope);
+                    });
+                });
+            }
+            if(moduleGroup){
+                $ocLazyLoad.load(moduleGroup).then(function () {
+                    $compile(elem.children())(scope);
+                });
+            }
+
+            scope.download = function(){
+                $window.open(scope.node.node, '_blank');
+            }
+        }
+    }
+});
+
+app.controller('quickStart', function($scope, Node){
+    var quickStart = Node.create('.nekumo/quick-start');
+
+    $scope.availabilityOptions = [
+        {name: 'Sólo este equipo', id: 'this_device'},
+        {name: 'Red de casa', id: 'home_network'},
+        {name: 'Todo internet', id: 'internet'}
+    ];
+    $scope.adminAvailabilityOptions = [
+        {name: 'Para este equipo', id: 'this_device'},
+        {name: 'En red de casa', id: 'home_network'},
+        {name: 'Requiere login', id: 'login'}
+    ];
+    $scope.anonymousPermsOptions = [
+        {name: 'Ningún permiso', id: 'none'},
+        {name: 'Sólo lectura', id: 'read'},
+        {name: 'Sólo escritura', id: 'write'},
+        {name: 'Lectura y escritura', id: 'read_write'}
+    ];
+    $scope.data = {};
+    //$scope.data.availability = $scope.availabilityOptions[0]['id'];
+    //$scope.data.adminAvailability = $scope.adminAvailabilityOptions[0]['id'];
+    //$scope.data.anonymousPerms = $scope.anonymousPermsOptions[3]['id'];
+    //$scope.data.address = '127.0.0.1';
+    //$scope.data.port = 7700;
+    $scope.isChanged = false;
+
+    $scope.fieldChange = function(section){
+        $scope.isChanged = true;
+    };
+
+    $scope.save = function(){
+        quickStart.execute('write', {"data": $scope.data}, function(data){
+            $scope.data = data.data;
+        });
+    };
+
+    $scope.loadData = function() {
+        quickStart.execute('read', function(data){
+            $scope.data = data.data;
+        });
+    };
+    $scope.loadData();
+});
+
+app.controller('RightPanelCtrl', function ($scope) {
+    $scope.getMimetypeTitle = function(){
+        return get_mimetype_value(MIMETYPES_TITLES, $scope._previewFile.node.mimetype);
+    };
+
+    $scope.getIcon = function(){
+        return get_mimetype_value(ICONS, $scope._previewFile.node.mimetype)['xicon'];
+    };
+
+    $scope.getIconColor = function(){
+        return get_mimetype_value(ICONS, $scope._previewFile.node.mimetype)['color']
+    };
+
+    $scope.getExtendedInfo = function(){
+        var info = [];
+        $scope._previewFile.node.extended_info(function(response){
+            console.debug(response);
+            angular.forEach(response.info || {}, function(value, key){
+                info[key] = value;
+            });
+        });
+        return info
+    };
+
+    $scope.$watch('_previewFile.node', function(){
+        $scope.extendedInfo = $scope.getExtendedInfo();
+    });
+});
+
 app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $window, $mdDialog, $mdToast, $mdMenu,
-                                  WebSocket, Node, DialogMessage) {
-    // Debug
-    NodesScope = $scope;
+                                  $mdSidenav, $log, $q, WebSocket, Node, DialogMessage) {
+    NodesScope = $scope; // Debug
+    $scope.Nodes = $scope; // Para poder acceder desde nodos hijos
+    $scope._previewFile = {};
     $scope.filter = {};
-    $scope.orderField = 'name';
+    $scope.orderField = 'name'; // field por el que se ordena en la tabla
     $scope.selected = [];
     $scope.cut_copy_nodes_exists = []; // Elementos que se copiarán o moverán en el pegado
     $scope.cut_copy_action = ''; // copy o move. Acción de pegado en la que se está ahora
@@ -303,7 +541,19 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
     $scope.name = ''; // Nombre del nodo en el que se encuentra ahora
     // El nodo que se ha seleccionado por usar el menú. Si se cancela la operación, debe devolverse a su
     // estado original
+    $scope.isRightPanelOpen = false;
     $scope.menu_right_node = null;
+    $scope.isAdmin = isAdmin;
+
+    function buildToggler(navID) {
+      return function() {
+        $mdSidenav(navID)
+          .toggle()
+          .then(function () {
+            $log.debug("toggle " + navID + " is done");
+          });
+      }
+    }
 
     var cut_copy = function(){
         var selected = $scope.get_selected_nodes();
@@ -335,6 +585,13 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
         if(!node){
             node = $scope.node;
         }
+        if(node[node.length-1] != '/'){
+            // Si el nodo entregado no termina en "/", se presupone que entonces es un archivo.
+            // Debe obtenerse el directorio.
+            node = node.split('/');
+            node.pop();
+            node = node.join('/');
+        }
         $scope.unselectAll();
         $scope.nodes = null;
         // Añadiremos y quitaremos ani-slide debido a un bug en mdTable, que no permite usar ngClass.
@@ -346,21 +603,32 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
         var slow_load = $timeout(function(){
             $scope.slow_load = true;
         }, 50);
-        WebSocket.get({'method': 'ls', 'node': decodeURIComponent(node)}).then(function (data) {
-            $scope.nodes = _.map(data.nodes, function (node) {
-                return new Node.create(node, $scope);
+        return $q(function(resolve, reject){
+            WebSocket.get({'method': 'ls', 'node': decodeURIComponent(node)}).then(function (data) {
+                $scope.nodes = _.map(data.nodes, function (node) {
+                    return new Node.create(node, $scope);
+                });
+                $scope.name = data.name;
+                $timeout.cancel(slow_load);
+                $timeout.cancel(loading);
+                $('#nodes').find('tr').addClass('ani-slide');
+                $('#loading').hide();
+                $scope.slow_load = false;
+                resolve();
+            }, function(data){
+                DialogMessage.error('Error al listar el directorio',
+                    printf('Se ha producido un error al solicitar un directorio. El servidor devolvió: «%s»',
+                        data.message));
+                reject();
             });
-            $scope.name = data.name;
-            $timeout.cancel(slow_load);
-            $timeout.cancel(loading);
-            $('#nodes').find('tr').addClass('ani-slide');
-            $('#loading').hide();
-            $scope.slow_load = false;
-        }, function(data){
-            DialogMessage.error('Error al listar el directorio',
-                printf('Se ha producido un error al solicitar un directorio. El servidor devolvió: «%s»',
-                    data.message))
         });
+    };
+
+    $scope.previewFile = function(node){
+        $scope._previewFile.node = node;
+        $timeout(function () {
+            $scope.toggleRight();
+        }, 50);
     };
 
     $scope.get_breadcrumb_nodes = function(){
@@ -405,18 +673,32 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
         _.remove(list, function(n){ return node == n.get_node() });
     };
 
-    $scope.go_to = function(node, $event){
-        node = absolute(getCurrentNode(), node);
+    $scope.goTo = function(node, $event){
+        var type = 'dir';
+        var path;
+        if(node.get_relative_path != undefined){
+            path = node.node;
+            type = node.type;
+        } else {
+            path = absolute(getCurrentNode(), node);
+        }
+        if(type == 'dir' && path[path.length-1] != '/'){
+            path += '/';
+        }
+
         if($event != undefined){
             $event.preventDefault();
         }
-        $location.path(node);
+        if(type == 'dir'){
+            $location.path(path);
+        } else {
+            $location.path(path).search({'preview': ''});
+        }
 
-        $timeout(function(){
-            $scope.node = getCurrentNode();
-            $scope.breadcrumb_nodes = $scope.get_breadcrumb_nodes();
-            $scope.getDirectory();
-        }, 50);
+    };
+
+    $scope.getNodeByName = function(name){
+        return _.filter($scope.nodes, {name: decodeURI(name)})[0];
     };
 
     $scope.rm = function(node, ev){
@@ -486,6 +768,10 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
     $scope.copy = function(){
         $scope.cut_copy_action = 'copy';
         cut_copy();
+    };
+
+    $scope.isFirstLoad = function(){
+        return $scope.nodes === undefined || $scope.nodes === null;
     };
 
     $scope.paste = function(dest_dir){
@@ -593,12 +879,58 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
         });
     };
 
+    $scope.$on('$locationChangeSuccess', function(event, newUrl, oldUrl) {
+        function previewFile(url){
+            var node = url.split('/');
+            node = node[node.length-1];
+            node = node.split('?', 1)[0];
+            if(!node){
+                return
+            }
+            node = $scope.getNodeByName(node);
+            $scope.previewFile(node);
+        }
+        // event.preventDefault();
+        var type;
+        if(newUrl[newUrl.length-1] == '/'){
+            type = 'dir';
+        } else {
+            type = 'file';
+        }
+        if(type == 'dir' || $scope.isFirstLoad()) {
+            $scope.node = getCurrentNode();
+            $scope.breadcrumb_nodes = $scope.get_breadcrumb_nodes();
+            //if($scope.isFirstLoad()){
+            //    // TODO
+            //} else {
+            //    $scope.getDirectory();
+            //}
+            $scope.getDirectory().then(function(){
+                previewFile(newUrl);
+            });
+            $scope.isRightPanelOpen = false;
+        } else {
+            previewFile(newUrl);
+        }
+    });
+
+    $scope.toggleRight = buildToggler('right');
+
+    $scope.isOpenRight = function(){
+      return $mdSidenav('right').isOpen();
+    };
+
+    $scope.$watch('isRightPanelOpen', function(){
+        if(!$scope.isRightPanelOpen && !$scope.isFirstLoad()){
+            var node = decodeURI($scope.node);
+            node = getPathWithoutFile(node);
+            $location.path(node).search({});
+        }
+    });
+
     $scope._ = _;
     $scope.Math = Math;
 
     // Obtener el directorio actual en el inicio. TODO: Mejorar esto.
     $scope.node = getCurrentNode();
-    $scope.breadcrumb_nodes = $scope.get_breadcrumb_nodes();
-
-    $scope.getDirectory();
 });
