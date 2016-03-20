@@ -371,13 +371,12 @@ app.config(['$ocLazyLoadProvider', function ($ocLazyLoadProvider) {
       },
       {
           name: 'Ace',
-          files: [
+          files: (debug ? [
               '/static/src/web/libs/ace-builds/src-min-noconflict/ace.js',
               '/static/src/web/libs/angular-ui-ace/ui-ace.js'
               //'/static/src/web/libs/highlightjs/highlight.pack.js',
               //'/static/src/web/libs/angular-highlightjs/angular-highlightjs.js'
-              // '/static/src/web/libs/videogular-controls/vg-controls.js'
-          ]
+          ] : ['/static/build/ace/ace.js', '/static/build/ace.min.js'])
       }
       ]
     });

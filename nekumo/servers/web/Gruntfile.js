@@ -5,6 +5,9 @@ var MINIFY = {
         {'src': 'static/src/web/libs/videogular'},
         {'src': 'static/src/web/libs/videogular-controls'},
         {'src': 'static/src/web/libs/videogular-themes-default', 'types': ['css']}
+    ],
+    'ace': [
+        {files: {'js': ['static/src/web/libs/angular-ui-ace/ui-ace.js']}}
     ]
 };
 
@@ -22,7 +25,11 @@ function getMinifyObjects(minify, type){
             if(source.types && source.types.indexOf(type) == -1){
                 continue
             }
-            sources.push(source.src + '/**/*.min.' + type);
+            if(source.files && source.files[type]){
+                sources.push.apply(sources, source.files[type]);
+            } else {
+                sources.push(source.src + '/**/*.min.' + type);
+            }
         }
         results.push({
             'src': sources,
@@ -32,7 +39,6 @@ function getMinifyObjects(minify, type){
     return results
 }
 
-getMinifyObjects(MINIFY, 'js');
 
 function extendsList(a, b){
     Array.prototype.push.apply(a, b);
@@ -135,6 +141,14 @@ module.exports = function(grunt) {
                         flatten: true, expand: true, src: [
                             'static/src/web/libs/videogular-themes-default/fonts/*'
                         ], dest: 'static/build/'
+                    }
+                ]
+            },
+            ace: {
+                files: [
+                    {
+                        src: ['**'], dest: 'static/build/ace',
+                        expand: true, cwd: 'static/src/web/libs/ace-builds/src-min-noconflict'
                     }
                 ]
             }
