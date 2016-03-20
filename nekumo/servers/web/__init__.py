@@ -6,7 +6,7 @@ import werkzeug.wrappers
 import werkzeug.routing
 from werkzeug.debug import DebuggedApplication
 
-from config import WebConfig
+from .config import WebConfig
 from geventwebsocket.handler import WebSocketHandler
 from nekumo.api.base import BaseRequest
 

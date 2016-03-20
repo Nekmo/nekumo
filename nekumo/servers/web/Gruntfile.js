@@ -1,4 +1,32 @@
 
+
+var MINIFY = {
+    'videogular': [
+        'static/src/web/libs/videogular',
+        'static/src/web/libs/videogular-controls',
+        'static/src/web/libs/videogular-themes-default'
+    ]
+};
+
+
+function getMinifyObjects(minify, type){
+    var group;
+    var results = [];
+    for(group_name in minify){
+        group = minify[group_name];
+        results.push({
+            'src': group.map( function(s){ return s + '/**/*.' + type}),
+            'dest': 'static/build/' + group_name + '.min.' + type
+        });
+    }
+    return results
+}
+
+function extendsList(a, b){
+    Array.prototype.push.apply(a, b);
+    return a;
+}
+
 module.exports = function(grunt) {
 
     // Project configuration.
@@ -23,6 +51,14 @@ module.exports = function(grunt) {
                 replacements: [{
                     from: '../fonts/',                   // string replacement
                     to: ''
+                }]
+            },
+            videogular: {
+                src: ['static/build/videogular.min.css'],
+                overwrite: true,
+                replacements: [{
+                    from: 'fonts/',
+                    'to': ''
                 }]
             }
         },
@@ -51,13 +87,13 @@ module.exports = function(grunt) {
                 banner: '/*! <%= pkg.name %> <%= grunt.template.today("yyyy-mm-dd HH:MM") %> */\n'
             },
             build: {
-                files: [
+                files: extendsList([
                     {
                         expand: true,
                         src: '.tmp/concat/*.js',
                         dest: 'static/build/'
                     }
-                ]
+                ],getMinifyObjects(MINIFY, 'js'))
             }
         },
         //Los CSS desde .tmp/concat/ se minifican y se llevan al directorio static/build/
@@ -67,20 +103,27 @@ module.exports = function(grunt) {
             },
             build: {
                 files: [
-                    {
+                    extendsList([{
                         expand: true,
                         src: '.tmp/concat/*.css',
                         dest: 'static/build/'
-                    }
+                    }], getMinifyObjects(MINIFY, 'css'))
                 ]
             }
         },
         copy: {
             fonts: {
                 files: [
-                    {flatten: true, expand: true, src: [
-                        'static/src/web/libs/mdi/fonts/*'
-                    ], dest: 'static/build/'}
+                    {
+                        flatten: true, expand: true, src: [
+                            'static/src/web/libs/mdi/fonts/*'
+                        ], dest: 'static/build/'
+                    },
+                    {
+                        flatten: true, expand: true, src: [
+                            'static/src/web/libs/videogular-themes-default/fonts/*'
+                        ], dest: 'static/build/'
+                    }
                 ]
             }
         },
@@ -111,7 +154,7 @@ module.exports = function(grunt) {
     // Default task(s).
     grunt.registerTask('default', [
         'replace:html', 'useminPrepare', 'concat', 'ngAnnotate', 'uglify', 'replace:css',
-        'cssmin', 'copy',  'clean'
+        'cssmin', 'replace:videogular', 'copy',  'clean'
     ]);
 
 };
