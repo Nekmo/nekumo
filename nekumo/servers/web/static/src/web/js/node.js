@@ -495,6 +495,11 @@ app.controller('quickStart', function($scope, Node){
             $scope.data = data.data;
         });
     };
+
+    $scope.hideQuickStart = function(){
+        quickStart.execute('show_quickstart', {'value': false});
+        $scope.Nodes.showQuickAdmin = false;
+    };
     $scope.loadData();
 });
 
@@ -544,6 +549,7 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
     $scope.isRightPanelOpen = false;
     $scope.menu_right_node = null;
     $scope.isAdmin = isAdmin;
+    $scope.showQuickStart = showQuickStart;
 
     function buildToggler(navID) {
       return function() {

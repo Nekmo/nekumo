@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request
+from flask import Flask, request, current_app, session, abort
 from gevent.pywsgi import WSGIServer
 import werkzeug.serving
 import werkzeug.wrappers
@@ -8,6 +8,7 @@ from werkzeug.debug import DebuggedApplication
 
 from config import WebConfig
 from geventwebsocket.handler import WebSocketHandler
+from nekumo.api.base import BaseRequest
 
 __author__ = 'nekmo'
 
@@ -25,10 +26,39 @@ def _wsgi_decoding_dance(s, charset='utf-8', errors='replace'):
 setattr(werkzeug.wrappers, 'wsgi_decoding_dance', _wsgi_decoding_dance)
 setattr(werkzeug.routing, 'wsgi_decoding_dance', _wsgi_decoding_dance)
 
+
+def get_user():
+    users = current_app.nekumo.config.users
+    if session.get('username') in users and session.get('security_hash') == users[session['username']].security_hash:
+        return users[session['username']]
+    address = request.remote_addr
+    user = users.address_login(address)
+    if user:
+        session['username'] = user.username
+        session['security_hash'] = user.security_hash
+        session.permanent = True
+    return user
+
+
+def has_perms(*perms):
+    user = get_user()
+    if user is None:
+        abort(401)
+    if not user.has_perms(*perms):
+        abort(401)
+    return True
+
+
 class NekumoHandler(WebSocketHandler, werkzeug.serving.WSGIRequestHandler):
     log_request = werkzeug.serving.WSGIRequestHandler.log_request
     log_error = werkzeug.serving.WSGIRequestHandler.log_error
     log_message = werkzeug.serving.WSGIRequestHandler.log_message
+
+
+class WebRequest(BaseRequest):
+    def __init__(self):
+        super().__init__()
+        self.user = get_user()
 
 
 class DebuggedWSApplication(DebuggedApplication):
@@ -62,6 +92,7 @@ class WebServer(object):
         self.config = WebConfig(os.path.join(self.nekumo.config_dir, 'servers', 'web',  'config.json'))
 
     def set_up_flask(self):
+        from nekumo.servers.web.views import web_bp
         self.update_globals(self.default_globals)
         self.app.register_blueprint(web_bp)
 
@@ -96,4 +127,3 @@ class WebServer(object):
 
 
 Server = WebServer
-from nekumo.servers.web.views import web_bp

@@ -1,5 +1,5 @@
 from nekumo.api.base import API
-from nekumo.api.decorators import method
+from nekumo.api.decorators import method, has_perms
 from nekumo.utils.network import get_public_address
 
 
@@ -11,6 +11,7 @@ class QuickStart(API):
         return stanza.node == '.nekumo/quick-start' or stanza.node == '/.nekumo/quick-start'
 
     @method
+    @has_perms('admin')
     def read(self):
         server = self.nekumo.servers[self.nekumo.main_server]
         admin = self.nekumo.config.users['admin']
@@ -41,6 +42,7 @@ class QuickStart(API):
         }
 
     @method
+    @has_perms('admin')
     def write(self, data):
         server = self.nekumo.servers[self.nekumo.main_server]
         admin = self.nekumo.config.users['admin']
@@ -70,3 +72,10 @@ class QuickStart(API):
         server['port'] = data['port']
         self.nekumo.config.save()
         server.save()
+
+    @method
+    @has_perms('admin')
+    def show_quickstart(self, value):
+        config = self.nekumo.config
+        config['show_quickstart'] = value
+        config.save()

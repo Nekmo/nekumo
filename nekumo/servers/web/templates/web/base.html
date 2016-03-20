@@ -115,6 +115,7 @@
             var websocket_path = '{{ websocket_path }}';
             var static_root = '{{ nekumo_root }}/static/';
             var isAdmin = {{ is_admin|tojson }};
+            var showQuickStart= {{ show_quickstart|tojson }};
         </script>
         {% if debug %}
             <!-- build:js base-nekumo.min.js -->

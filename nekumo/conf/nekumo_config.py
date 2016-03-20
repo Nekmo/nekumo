@@ -4,8 +4,7 @@ from ipaddress import IPv4Address, IPv4Network
 
 import bcrypt as bcrypt
 
-from nekumo.conf import Config, ListParser, DictParser
-
+from nekumo.conf import Config, ListParser, DictParser, BooleanField
 
 PERMS = {
     'admin': {'write', 'read'},
@@ -61,8 +60,8 @@ class User(DictParser):
     def has_perm(self, perm):
         return self['perms'].has_perm(perm)
 
-    def has_perms(self, *perm):
-        return self['perms'].has_perms(*perm)
+    def has_perms(self, *perms):
+        return self['perms'].has_perms(*perms)
 
 
 class Users(DictParser):
@@ -111,4 +110,5 @@ class NekumoConfig(Config):
     schema = {
         "users": Users,
         "servers": ListParser,
+        "show_quickstart": BooleanField(),
     }

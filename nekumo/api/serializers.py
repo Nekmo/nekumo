@@ -22,8 +22,9 @@ class Encoder(json.JSONEncoder):
 class JsonSerializer(API):
 
     @classmethod
-    def raw_to_best_stanza(cls, nekumo, data):
+    def raw_to_best_stanza(cls, nekumo, data, request=None):
         data = cls.deserialize(data)
+        data['request'] = request
         stanza = cls.get_base_stanza(nekumo, data, False)
         stanza_class = cls.mix_api_class(cls.get_best_class(stanza))
         return stanza_class(nekumo, **data)

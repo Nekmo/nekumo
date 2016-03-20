@@ -1,14 +1,14 @@
 import os
 
-from flask import Blueprint, render_template, send_from_directory, request, redirect, send_file, current_app, session
 import gevent
+from flask import Blueprint, render_template, send_from_directory, request, redirect, send_file, current_app
+from werkzeug.exceptions import NotFound
 
 from geventwebsocket.exceptions import WebSocketError
-from werkzeug.exceptions import NotFound, abort
 from nekumo.api import Node
 from nekumo.api.serializers import JsonSerializer
 from nekumo.core.exceptions import InvalidNode, NekumoException, SerializerError
-from nekumo.servers.web import NEKUMO_ROOT, WEBSOCKET_PATH, ANGULAR_MODULES
+from nekumo.servers.web import NEKUMO_ROOT, WEBSOCKET_PATH, ANGULAR_MODULES, get_user, has_perms, WebRequest
 
 __author__ = 'nekmo'
 
@@ -16,28 +16,6 @@ web_bp = Blueprint('core', __name__, template_folder='templates')
 
 STATIC_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
 Serializer = JsonSerializer
-
-
-def get_user():
-    users = current_app.nekumo.config.users
-    if session.get('username') in users and session.get('security_hash') == users[session['username']].security_hash:
-        return users[session['username']]
-    address = request.remote_addr
-    user = users.address_login(address)
-    if user:
-        session['username'] = user.username
-        session['security_hash'] = user.security_hash
-        session.permanent = True
-    return user
-
-
-def has_perms(*perms):
-    user = get_user()
-    if user is None:
-        abort(401)
-    if not user.has_perms(*perms):
-        abort(401)
-    return True
 
 
 def execute(stanza):
@@ -71,7 +49,8 @@ def index(path='/'):
         import json
         return json.dumps(node(nekumo, path).read())
     return render_template('web/node.html', angular_modules=modules, debug=current_app.config['DEBUG'],
-                           is_admin=user.has_perm('admin'))
+                           is_admin=user.has_perm('admin'),
+                           show_quickstart=current_app.nekumo.config.get('show_quickstart', False))
 
 
 @web_bp.route('%s/static/<path:path>' % NEKUMO_ROOT)
@@ -84,6 +63,7 @@ def send_js(path):
 def serve_api():
     if request.environ.get('wsgi.websocket'):
         ws = request.environ['wsgi.websocket']
+        nekumo_request = WebRequest()
         while True:
             try:
                 message = ws.receive()
@@ -92,7 +72,7 @@ def serve_api():
             if message is None:
                 continue
             try:
-                stanza = Serializer.raw_to_best_stanza(current_app.nekumo, message)
+                stanza = Serializer.raw_to_best_stanza(current_app.nekumo, message, nekumo_request)
             except SerializerError as e:
                 ws.send(Serializer.serialize(e.serialize()))
                 continue

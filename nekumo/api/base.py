@@ -21,8 +21,9 @@ class API(RegisteringBase):
     status = 'success' # error, success, info, warning
     id = None
     end = True
+    request = None
 
-    def __init__(self, nekumo, node='', method='', status='success', id=None, end=True, **params):
+    def __init__(self, nekumo, node='', method='', status='success', id=None, end=True, request=None, **params):
         if not isinstance(nekumo, Nekumo):
             raise AttributeError('Nekumo argument is not a Nekumo instance.')
         for param in set(locals()) - {'self'}:
@@ -145,3 +146,8 @@ class Response(dict):
     def set_update_stanza(self, update_stanza=True):
         self._update_stanza = update_stanza
         return self
+
+
+class BaseRequest(object):
+    def __init__(self):
+        pass

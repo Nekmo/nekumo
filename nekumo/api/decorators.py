@@ -1,6 +1,17 @@
+from nekumo.core.exceptions import SecurityError
 from nekumo.utils.decorators import optional_args
 
 __author__ = 'nekmo'
+
+
+def has_perms(*perms):
+    def perms_decorator(func):
+        def func_wrapper(self, *args, **kwargs):
+            if not self.request.user.has_perms(*perms):
+                raise SecurityError('Security Error')
+            return func(self, *args, **kwargs)
+        return func_wrapper
+    return perms_decorator
 
 
 # @method

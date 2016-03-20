@@ -19,6 +19,11 @@ class IntegerField(Field):
         return int(value)
 
 
+class BooleanField(Field):
+    def parse(self, value):
+        return bool(value)
+
+
 class BaseParser(object):
     _key = None  # Si el padre es un diccionario, el key del mismo
     _parent = None  # El elemento padre

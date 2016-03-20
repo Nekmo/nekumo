@@ -17,7 +17,8 @@
 {% block content %}
     {% raw %}
         <main class="container" ng-controller="Nodes" ng-cloak>
-            <div layout="row" layout-align="center" ng-controller="quickStart" id="quick-start" ng-if="isAdmin">
+            <div layout="row" layout-align="center" ng-controller="quickStart" id="quick-start"
+                 ng-if="isAdmin && Nodes.showQuickStart">
                 <section layout="column" class="md-inline-form layout-max-width md-whiteframe-z1"
                           md-theme="blue-world">
                     <md-toolbar class="radius-toolbar">
@@ -34,7 +35,8 @@
                             </div>
 
                             <span flex></span>
-                            <md-button aria-label="Close" class="close-button md-icon-button">
+                            <md-button aria-label="Close" class="close-button md-icon-button"
+                                       ng-click="hideQuickStart()">
                                 <md-icon class="mdi mdi-close close"></md-icon>
                             </md-button>
                         </div>

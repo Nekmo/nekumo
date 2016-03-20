@@ -7,7 +7,7 @@ from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 
 from nekumo.api.base import API, Response
-from nekumo.api.decorators import method
+from nekumo.api.decorators import method, has_perms
 from nekumo.core.exceptions import InvalidNode
 from nekumo.utils.nodes import clear_end_path
 from nekumo.utils.filesystem import copytree
@@ -41,6 +41,7 @@ class Node(API):
         return clear_end_path(self.node).split('/')[-1]
 
     @method
+    @has_perms('read', 'write')
     def move(self, dest, override=False):
         # TODO: renombrar override como "overwrite".
         path = self.get_path()
@@ -51,6 +52,7 @@ class Node(API):
         shutil.move(path, dest)
 
     @method
+    @has_perms('read')
     def info(self):
         path = self.get_path()
         return Response(self, name=self.get_name(), mtime=os.path.getmtime(path), size=os.path.getsize(path),
@@ -73,6 +75,7 @@ class Node(API):
         return info
 
     @method
+    @has_perms('read')
     def extended_info(self):
         return []
 
@@ -86,6 +89,7 @@ class Dir(Node):
         return os.path.isdir(stanza.get_path())
 
     @method
+    @has_perms('read')
     def count(self):
         walker = os.walk(self.get_path())
         dirs_count = 0
@@ -98,6 +102,7 @@ class Dir(Node):
         return Response(dirs=dirs_count, files=files_count)
 
     @method
+    @has_perms('read')
     def ls(self, deep=0):
         # Cambiar nombre a list
         self.deep = deep
@@ -109,16 +114,18 @@ class Dir(Node):
         return nodes
 
     @method
+    @has_perms('read', 'write')
     def copy(self, dest, override=False):
         copytree(*self._copy(dest, override))
 
     @method
+    @has_perms('write')
     def rm(self):
         # Cambiar por Remove
         shutil.rmtree(self.get_path())
 
     def _get_node(self, node_path):
-        node = Node(self.nekumo, self.get_relative_path(node_path))
+        node = Node(self.nekumo, self.get_relative_path(node_path), request=self.request)
         try:
             stanza_class = self.get_best_class(node)
         except InvalidNode:
@@ -127,7 +134,7 @@ class Dir(Node):
             # TODO: Será necesario devolver un error dentro de un propio listado.
             return
         result = stanza_class(self.nekumo, self.get_relative_path(node_path),
-                              method='ls' if stanza_class is Dir and self.deep else 'info')
+                              method='ls' if stanza_class is Dir and self.deep else 'info', request=self.request)
         if stanza_class is Dir:
             result.deep = (self.deep - 1) if self.deep else 0
         return result
@@ -141,14 +148,17 @@ class File(Node):
         return os.path.isfile(stanza.get_path())
 
     @method
+    @has_perms('read', 'write')
     def copy(self, dest, override):
         shutil.copyfile(*self._copy(dest))
 
     @method
+    @has_perms('write')
     def rm(self):
         os.remove(self.get_path())
 
     @method
+    @has_perms('read')
     def extended_info(self):
         parser = createParser(self.get_path())
         if parser is None:
