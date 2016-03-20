@@ -116,6 +116,7 @@
             var static_root = '{{ nekumo_root }}/static/';
             var isAdmin = {{ is_admin|tojson }};
             var showQuickStart= {{ show_quickstart|tojson }};
+            var debug = {{ debug|tojson }};
         </script>
         {% if debug %}
             <!-- build:js base-nekumo.min.js -->

@@ -364,10 +364,10 @@ app.config(['$ocLazyLoadProvider', function ($ocLazyLoadProvider) {
     $ocLazyLoadProvider.config({
       modules: [{
           name: 'Videogular',
-          files: [
-              '/static/src/web/libs/videogular/videogular.js',
-              '/static/src/web/libs/videogular-controls/vg-controls.js'
-          ]
+          files: (debug ? [
+              '/static/src/web/libs/videogular/videogular.min.js',
+              '/static/src/web/libs/videogular-controls/vg-controls.min.js'
+          ] : ['/static/build/videogular.min.js'])
       },
       {
           name: 'Ace',

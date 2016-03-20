@@ -2,25 +2,37 @@
 
 var MINIFY = {
     'videogular': [
-        'static/src/web/libs/videogular',
-        'static/src/web/libs/videogular-controls',
-        'static/src/web/libs/videogular-themes-default'
+        {'src': 'static/src/web/libs/videogular'},
+        {'src': 'static/src/web/libs/videogular-controls'},
+        {'src': 'static/src/web/libs/videogular-themes-default', 'types': ['css']}
     ]
 };
 
 
 function getMinifyObjects(minify, type){
     var group;
+    var source;
+    var sources;
     var results = [];
     for(group_name in minify){
         group = minify[group_name];
+        sources = [];
+        for(i in group){
+            source = group[i];
+            if(source.types && source.types.indexOf(type) == -1){
+                continue
+            }
+            sources.push(source.src + '/**/*.min.' + type);
+        }
         results.push({
-            'src': group.map( function(s){ return s + '/**/*.' + type}),
+            'src': sources,
             'dest': 'static/build/' + group_name + '.min.' + type
         });
     }
     return results
 }
+
+getMinifyObjects(MINIFY, 'js');
 
 function extendsList(a, b){
     Array.prototype.push.apply(a, b);
