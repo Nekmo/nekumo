@@ -1,0 +1,67 @@
+<md-menu>
+    <md-button aria-label="Open phone interactions menu" class="md-icon-button"
+               ng-click="open_menu($mdOpenMenu, $event, node)">
+        <md-icon class="mdi mdi-dots-vertical" md-menu-origin icon="dots-vertical">
+        </md-icon>
+    </md-button>
+    <md-menu-content width="3">
+        <md-menu-item>
+            <md-button ng-click="ctrl.redial($event)">
+                <md-icon class="mdi mdi-download" md-menu-align-target icon="download">
+                </md-icon>
+                Descargar
+            </md-button>
+        </md-menu-item>
+        <md-menu-item>
+            <md-button ng-click="set_menu_right_node(null); menuCtrl.openWith(node, $event)">
+                <md-icon class="mdi mdi-open-in-app" md-menu-align-target icon="open-with">
+                </md-icon>
+                Abrir con...
+            </md-button>
+        </md-menu-item>
+        <md-menu-item>
+            <md-button ng-click="ctrl.redial($event)" ng-disabled="selected.length > 1">
+                <md-icon class="mdi mdi-pencil" md-menu-align-target icon="pencil">
+                </md-icon>
+                Cambiar nombre
+            </md-button>
+        </md-menu-item>
+        <md-menu-item>
+            <md-button ng-click="ctrl.redial($event)" ng-disabled="selected.length > 1">
+                <md-icon class="mdi mdi-information" md-menu-align-target icon="information">
+                </md-icon>
+                Información
+            </md-button>
+        </md-menu-item>
+        <md-menu-divider></md-menu-divider>
+        <md-menu-item ng-if="Nodes.cut_copy_action != ''">
+            <md-button ng-click="set_menu_right_node(null); menuCtrl.paste(node, $event)" class="md-primary">
+                <md-icon class="mdi mdi-content-paste" md-menu-align-target icon="content-paste">
+                </md-icon>
+                Pegar
+            </md-button>
+        </md-menu-item>
+        <md-menu-item>
+            <md-button ng-disabled="Nodes.cut_copy_action != ''" ng-click="menuCtrl.copy(node, $event)">
+                <md-icon class="mdi mdi-content-copy" md-menu-align-target icon="content-copy">
+                </md-icon>
+                Copiar
+            </md-button>
+        </md-menu-item>
+        <md-menu-item>
+            <md-button ng-click="set_menu_right_node(null); menuCtrl.cut(node, $event)"
+                       ng-disabled="Nodes.cut_copy_action != ''">
+                <md-icon class="mdi mdi-content-cut" md-menu-align-target icon="content-cut">
+                </md-icon>
+                Cortar
+            </md-button>
+        </md-menu-item>
+        <md-menu-item>
+            <md-button ng-click="set_menu_right_node(null); menuCtrl.rm(node, $event)">
+                <md-icon class="mdi mdi-delete" md-menu-align-target icon="delete">
+                </md-icon>
+                Eliminar
+            </md-button>
+        </md-menu-item>
+    </md-menu-content>
+</md-menu>

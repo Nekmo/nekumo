@@ -91,6 +91,7 @@
                     </form>
                 </section>
             </div>
+
             <div layout="row" layout-align="center">
                 <ol class="breadcrumb layout-max-width">
                     <li>
@@ -273,210 +274,10 @@
         </main>
     {% endraw %}
     {% raw %}
-    <script type="text/ng-template" id="nekumo/copy_paste_nodes_exists.tmpl.html">
-        <md-dialog aria-label="El destino ya existe" style="max-width:800px;max-height:810px; ">
-            <form>
-                <md-toolbar class="md-primary">
-                    <div class="md-toolbar-tools">
-                        <h2>Los archivos o directorios destino ya existen</h2>
-                        <span flex></span>
-                    </div>
-                </md-toolbar>
-                <md-dialog-content>
-                    <div id="cut_copy_nodes_exists">
-                        <p>Mientras se intentaba {{ (copy_paste_action == 'move' ? 'mover' : 'copiar') }} los
-                            siguientes archivos o carpetas, nos hemos dado cuenta que ya había un archivo o carpeta
-                            con su nombre donde iban a pegarse. Necesitamos saber qué hacer: renombrar, ignorar o
-                            sobrescribir.</p>
-                        <md-content layout-padding ng-repeat="node in cut_copy_nodes_exists">
-                            <div layout layout-sm="column">
-                                <md-input-container flex md-no-float>
-                                    <md-icon ng-if="node.orig.type == 'dir'" class="mdi mdi-folder"
-                                             icon="folder"></md-icon>
-                                    <md-icon ng-if="node.orig.type != 'dir'" class="mdi mdi-file"
-                                             icon="file"></md-icon>
-                                    <input ng-model="node.dest_node.name" type="text" placeholder="Nombre">
-                                </md-input-container>
-                                <md-input-container ng-init="node.dest_node.orig_name = node.dest_node.name ">
-                                    <md-button ng-click="rename(node.orig, node.dest_node);"
-                                               ng-disabled="node.dest_node.orig_name == node.dest_node.name">
-                                        <md-icon class="mdi mdi-pencil" icon="pencil"></md-icon>
-                                        Renombrar
-                                    </md-button>
-                                </md-input-container>
-                                <md-input-container>
-                                    <md-button ng-click="ignore(node.orig);"
-                                               ng-disabled="node.dest_node.orig_name != node.dest_node.name">
-                                        <md-icon class="mdi mdi-exit-to-app" icon="exit-to-app"></md-icon>
-                                        Ignorar
-                                    </md-button>
-                                </md-input-container>
-                                <md-input-container>
-                                    <md-button ng-click="override(node.orig, node.dest_node);"
-                                               ng-disabled="node.dest_node.orig_name != node.dest_node.name">
-                                        <md-icon class="mdi mdi-weight-kilogram" icon="weight-kilogram">
-                                        </md-icon>
-                                        Sobrescribir
-                                    </md-button>
-                                </md-input-container>
-                            </div>
-                        </md-content>
-                    </div>
-                </md-dialog-content>
-                <div class="md-actions" layout="row">
-                    <span flex></span>
-                    <md-button style="margin-right:20px;" ng-click="ignoreAll();">
-                        <!--
-                        <md-tooltip md-direction="top">Pulse aquí para no hacer nada con los archivos que ya existen con
-                            nombres repetidos (ahora y durante esta operación).</md-tooltip>
-                        -->
-                        <md-icon class="mdi mdi-exit-to-app" icon="exit-to-app"></md-icon>
-                        Ignorar siempre
-                    </md-button>
-                    <md-button style="margin-right:20px;" ng-click="overrideAll();">
-                        <!--
-                        <md-tooltip md-direction="top">Use este botoón para sobrescribir todos los archivos que
-                            ya existiesen con el mismo nombre en la operación (ahora, y duranta esta operación).
-                        </md-tooltip>
-                        -->
-                        <md-icon class="mdi mdi-weight-kilogram" icon="weight-kilogram"></md-icon>
-                        Sobrescribir siempre
-                    </md-button>
-                </div>
-            </form>
-        </md-dialog>
-    </script>
 
     <!-- <script type="text/ng-template" id="nekumo/file-viewer-load.tmpl.html">
         <file-viewer></file-viewer>
     </script> -->
-
-    <script type="text/ng-template" id="nekumo/file-viewer.tmpl.html">
-        <div ng-switch="viewer">
-            <videogular vg-theme="config.theme" ng-switch-when="video">
-                <vg-media vg-src="config.sources"
-                        vg-tracks="config.tracks">
-                </vg-media>
-
-                <vg-controls vg-autohide="config.plugins.controls.autoHide"
-                             vg-autohide-time="config.plugins.controls.autoHideTime">
-                    <vg-play-pause-button></vg-play-pause-button>
-                    <vg-time-display>{{ currentTime | date:'mm:ss':'+0000' }}</vg-time-display>
-                    <vg-scrub-bar>
-                        <vg-scrub-bar-current-time></vg-scrub-bar-current-time>
-                    </vg-scrub-bar>
-                    <vg-time-display>{{ timeLeft | date:'mm:ss':'+0000' }}</vg-time-display>
-                    <vg-time-display>{{ totalTime | date:'mm:ss':'+0000' }}</vg-time-display>
-                    <vg-volume>
-                        <vg-mute-button></vg-mute-button>
-                        <vg-volume-bar></vg-volume-bar>
-                    </vg-volume>
-                    <vg-playback-button></vg-playback-button>
-                    <vg-fullscreen-button></vg-fullscreen-button>
-                </vg-controls>
-            </videogular>
-            <div ng-switch-when="image" id="image-viewer">
-                <img ng-src="{{ src.node }}" alt="{{ src.name }}">
-            </div>
-            <md-card ng-switch-when="text">
-                <div ui-ace="{
-                  useWrapMode : true,
-                  showGutter: false,
-                  theme:'twilight',
-                  mode: 'xml',
-                  firstLineNumber: 1,
-                  onLoad: aceLoaded,
-                  onChange: aceChanged
-                }" ng-model="text"></div>
-            </md-card>
-            <md-card ng-switch-default id="default-viewer">
-                <md-card-title>
-                  <md-card-title-text>
-                    <span class="md-headline">Sin previsualización</span>
-                    <span class="md-subhead">Descarga el archivo para poder visualizarlo.</span>
-                  </md-card-title-text>
-                  <md-card-title-media>
-                    <div class="md-media-lg card-media">
-                        <span class="mdi mdi-file"></span>
-                    </div>
-                  </md-card-title-media>
-                </md-card-title>
-                <md-card-actions layout="row" layout-align="end center" ng-click="download()">
-                  <md-button>Descargar ahora</md-button>
-                </md-card-actions>
-            </md-card>
-        </div>
-    </script>
-
-    <script type="text/ng-template" id="nekumo/menu-node.tmpl.html">
-        <md-menu>
-            <md-button aria-label="Open phone interactions menu" class="md-icon-button"
-                       ng-click="open_menu($mdOpenMenu, $event, node)">
-                <md-icon class="mdi mdi-dots-vertical" md-menu-origin icon="dots-vertical">
-                </md-icon>
-            </md-button>
-            <md-menu-content width="3">
-                <md-menu-item>
-                    <md-button ng-click="ctrl.redial($event)">
-                        <md-icon class="mdi mdi-download" md-menu-align-target icon="download">
-                        </md-icon>
-                        Descargar
-                    </md-button>
-                </md-menu-item>
-                <md-menu-item>
-                    <md-button ng-click="set_menu_right_node(null); menuCtrl.openWith(node, $event)">
-                        <md-icon class="mdi mdi-open-in-app" md-menu-align-target icon="open-with">
-                        </md-icon>
-                        Abrir con...
-                    </md-button>
-                </md-menu-item>
-                <md-menu-item>
-                    <md-button ng-click="ctrl.redial($event)" ng-disabled="selected.length > 1">
-                        <md-icon class="mdi mdi-pencil" md-menu-align-target icon="pencil">
-                        </md-icon>
-                        Cambiar nombre
-                    </md-button>
-                </md-menu-item>
-                <md-menu-item>
-                    <md-button ng-click="ctrl.redial($event)" ng-disabled="selected.length > 1">
-                        <md-icon class="mdi mdi-information" md-menu-align-target icon="information">
-                        </md-icon>
-                        Información
-                    </md-button>
-                </md-menu-item>
-                <md-menu-divider></md-menu-divider>
-                <md-menu-item ng-if="Nodes.cut_copy_action != ''">
-                    <md-button ng-click="set_menu_right_node(null); menuCtrl.paste(node, $event)" class="md-primary">
-                        <md-icon class="mdi mdi-content-paste" md-menu-align-target icon="content-paste">
-                        </md-icon>
-                        Pegar
-                    </md-button>
-                </md-menu-item>
-                <md-menu-item>
-                    <md-button ng-disabled="Nodes.cut_copy_action != ''" ng-click="menuCtrl.copy(node, $event)">
-                        <md-icon class="mdi mdi-content-copy" md-menu-align-target icon="content-copy">
-                        </md-icon>
-                        Copiar
-                    </md-button>
-                </md-menu-item>
-                <md-menu-item>
-                    <md-button ng-click="set_menu_right_node(null); menuCtrl.cut(node, $event)"
-                               ng-disabled="Nodes.cut_copy_action != ''">
-                        <md-icon class="mdi mdi-content-cut" md-menu-align-target icon="content-cut">
-                        </md-icon>
-                        Cortar
-                    </md-button>
-                </md-menu-item>
-                <md-menu-item>
-                    <md-button ng-click="set_menu_right_node(null); menuCtrl.rm(node, $event)">
-                        <md-icon class="mdi mdi-delete" md-menu-align-target icon="delete">
-                        </md-icon>
-                        Eliminar
-                    </md-button>
-                </md-menu-item>
-            </md-menu-content>
-        </md-menu>
-    </script>
 
     {% endraw %}
 {% endblock %}
@@ -498,6 +299,10 @@
     {% if debug %}
         <!-- build:js node-nekumo.min.js -->
         <script src="{{ nekumo_root }}/static/src/web/js/node.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/js/directives/node-menu.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/js/directives/file-viewer.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/js/controllers/quick-start.js"></script>
+        <script src="{{ nekumo_root }}/static/src/web/js/controllers/right-panel.js"></script>
         <!-- endbuild -->
     {% else %}
         <script src="{{ nekumo_root }}/static/build/node-nekumo.min.js"></script>

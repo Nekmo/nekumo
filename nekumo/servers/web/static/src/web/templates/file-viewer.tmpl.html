@@ -1,0 +1,54 @@
+<div ng-switch="viewer">
+    <videogular vg-theme="config.theme" ng-switch-when="video">
+        <vg-media vg-src="config.sources"
+                vg-tracks="config.tracks">
+        </vg-media>
+
+        <vg-controls vg-autohide="config.plugins.controls.autoHide"
+                     vg-autohide-time="config.plugins.controls.autoHideTime">
+            <vg-play-pause-button></vg-play-pause-button>
+            <vg-time-display>{{ currentTime | date:'mm:ss':'+0000' }}</vg-time-display>
+            <vg-scrub-bar>
+                <vg-scrub-bar-current-time></vg-scrub-bar-current-time>
+            </vg-scrub-bar>
+            <vg-time-display>{{ timeLeft | date:'mm:ss':'+0000' }}</vg-time-display>
+            <vg-time-display>{{ totalTime | date:'mm:ss':'+0000' }}</vg-time-display>
+            <vg-volume>
+                <vg-mute-button></vg-mute-button>
+                <vg-volume-bar></vg-volume-bar>
+            </vg-volume>
+            <vg-playback-button></vg-playback-button>
+            <vg-fullscreen-button></vg-fullscreen-button>
+        </vg-controls>
+    </videogular>
+    <div ng-switch-when="image" id="image-viewer">
+        <img ng-src="{{ src.node }}" alt="{{ src.name }}">
+    </div>
+    <md-card ng-switch-when="text">
+        <div ui-ace="{
+          useWrapMode : true,
+          showGutter: false,
+          theme:'twilight',
+          mode: 'xml',
+          firstLineNumber: 1,
+          onLoad: aceLoaded,
+          onChange: aceChanged
+        }" ng-model="text"></div>
+    </md-card>
+    <md-card ng-switch-default id="default-viewer">
+        <md-card-title>
+          <md-card-title-text>
+            <span class="md-headline">Sin previsualización</span>
+            <span class="md-subhead">Descarga el archivo para poder visualizarlo.</span>
+          </md-card-title-text>
+          <md-card-title-media>
+            <div class="md-media-lg card-media">
+                <span class="mdi mdi-file"></span>
+            </div>
+          </md-card-title-media>
+        </md-card-title>
+        <md-card-actions layout="row" layout-align="end center" ng-click="download()">
+          <md-button>Descargar ahora</md-button>
+        </md-card-actions>
+    </md-card>
+</div>

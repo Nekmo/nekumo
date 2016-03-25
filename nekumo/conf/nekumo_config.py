@@ -84,7 +84,7 @@ class Users(DictParser):
             users.extend(network_users)
         if not users:
             return
-        return sorted(users, key=lambda x: len(x.perms._perms))[0]
+        return sorted(users, key=lambda x: len(x.perms._perms))[-1]
 
     def parse_schema_element(self, key, value):
         element = super(Users, self).parse_schema_element(key, value)

@@ -80,9 +80,6 @@ class Encoder(object):
             incompatibilities.add('video')
         if 'hard_subs' in extras:
             incompatibilities.add('video')
-        # mediainfo --Output=XML source.mkv
-        # Encodear (Cambiar ext mkv a mp4)
-        # ffmpeg -i '[AU] Working!! 2 - 01 [BD][99EB9224].mkv' -c:a copy -c:v libx264 -y -movflags faststart -flags global_header -f matroska -vf subtitles=/tmp/source.mkv /tmp/video3.mp4
         return incompatibilities
 
     def get_extras(self):
@@ -120,7 +117,6 @@ class Encoder(object):
         # Output
         output = os.path.join(TEMPDIR, uuid4().hex + '.mkv')
         args.extend([output])
-        print(args)
         self.popen = Popen(args)
         self.output_encode = output
         return output
