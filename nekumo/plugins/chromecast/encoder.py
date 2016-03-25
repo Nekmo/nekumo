@@ -2,6 +2,7 @@ import logging
 import shutil
 import tempfile
 import warnings
+import copy
 from uuid import uuid4
 
 from subprocess import check_output, Popen
@@ -10,7 +11,7 @@ import xml.etree.ElementTree as ET
 import os
 
 TEMPDIR = tempfile.tempdir or '/tmp'
-
+REPLACES = ['[', ']', '-']
 
 if hasattr(shutil, 'which'):
     # Sólo está soportado en Python +3.3
@@ -19,6 +20,11 @@ if hasattr(shutil, 'which'):
     if not shutil.which('mediainfo'):
         warnings.warn('Mediainfo is not installed, and is required for encoder.', UserWarning)
 
+
+def escape_name(name):
+    for replace in REPLACES:
+        name = name.replace(replace, '\\' + replace)
+    return name
 
 class Encoder(object):
     popen = None
@@ -30,9 +36,10 @@ class Encoder(object):
         }
     }
 
-    def __init__(self, input_file):
+    def __init__(self, input_file, extras=None):
         self._mediainfo = None
         self.input_file = input_file
+        self.extras = extras or {}
 
     def mediainfo(self):
         if self._mediainfo:
@@ -55,21 +62,41 @@ class Encoder(object):
             return videos[0]
         return
 
+    def get_subtitles(self):
+        info = self.mediainfo()
+        return info.findall('track[@type=\'Text\']')
+
     def incompatibilities(self):
         incompatibilities = set()
         # if self.input_file.endswith('.mkv'):
         #     incompatibilities.add(['extension'])
         video = self.get_video_info()
+        extras = self.get_extras()
         if video and video.find('Bit_depth').text not in self.validation['video']['bit_depths']:
             # Es un vídeo de 10 bits o superior
             incompatibilities.add('video')
         if video and video.find('Title').text not in self.validation['video']['codecs']:
             # El codec no es válido
             incompatibilities.add('video')
+        if 'hard_subs' in extras:
+            incompatibilities.add('video')
         # mediainfo --Output=XML source.mkv
         # Encodear (Cambiar ext mkv a mp4)
         # ffmpeg -i '[AU] Working!! 2 - 01 [BD][99EB9224].mkv' -c:a copy -c:v libx264 -y -movflags faststart -flags global_header -f matroska -vf subtitles=/tmp/source.mkv /tmp/video3.mp4
         return incompatibilities
+
+    def get_extras(self):
+        extras = copy.deepcopy(self.extras)
+        if extras.get('hard_subs') and not len(self.get_subtitles()):
+            extras.pop('hard_subs')
+        return extras
+
+    def args_extras(self, extras=None):
+        extras = extras or self.get_extras()
+        args_extras = []
+        if 'hard_subs' in extras:
+            args_extras.extend(['-vf',  'subtitles={}'.format(escape_name(self.input_file))])
+        return args_extras
 
     def clean(self):
         if self.popen:
@@ -88,9 +115,12 @@ class Encoder(object):
         args.extend(['-c:v', 'libx264' if 'video' in incompatibilities else 'copy'])
         # Audio
         args.extend(['-c:a', 'libfdk_aac' if 'audio' in incompatibilities else 'copy'])
+        # Extras
+        args.extend(self.args_extras())
         # Output
         output = os.path.join(TEMPDIR, uuid4().hex + '.mkv')
         args.extend([output])
+        print(args)
         self.popen = Popen(args)
         self.output_encode = output
         return output

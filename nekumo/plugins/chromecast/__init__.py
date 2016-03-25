@@ -50,7 +50,7 @@ class Chromecasts(list):
     def play(self, device, node):
         # Quito la app que ya estuviese abierta para evitar conflictos
         device.quit_app()
-        encoder = Encoder(node.get_path())
+        encoder = Encoder(node.get_path(), extras={'hard_subs': True})
         file = encoder.encode()
         id = uuid4().hex
         mc = device.media_controller
