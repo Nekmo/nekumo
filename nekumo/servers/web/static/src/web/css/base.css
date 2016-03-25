@@ -144,6 +144,9 @@ md-input-container.md-dark-theme-theme label {
   border-radius: 3px 3px 0 0;
   box-shadow: 0 1px rgba(255, 255, 255, 0.1); }
 
+.md-open-menu-container {
+  position: absolute; }
+
 /* Cabecera */
 header {
   padding-top: 15px;

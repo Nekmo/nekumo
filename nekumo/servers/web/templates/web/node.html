@@ -424,6 +424,13 @@
                     </md-button>
                 </md-menu-item>
                 <md-menu-item>
+                    <md-button ng-click="set_menu_right_node(null); menuCtrl.openWith(node, $event)">
+                        <md-icon class="mdi mdi-open-in-app" md-menu-align-target icon="open-with">
+                        </md-icon>
+                        Abrir con...
+                    </md-button>
+                </md-menu-item>
+                <md-menu-item>
                     <md-button ng-click="ctrl.redial($event)" ng-disabled="selected.length > 1">
                         <md-icon class="mdi mdi-pencil" md-menu-align-target icon="pencil">
                         </md-icon>

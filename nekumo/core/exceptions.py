@@ -49,3 +49,7 @@ class SecurityError(NekumoException):
 
 class ProgrammingError(NekumoException):
     pass
+
+
+class NekumoKeyError(NekumoException):
+    pass

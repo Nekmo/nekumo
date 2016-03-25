@@ -1,0 +1,29 @@
+<md-bottom-sheet class="md-list md-has-header" ng-cloak id="open-with">
+    <md-subheader>Abrir con...</md-subheader>
+    <md-list>
+        <md-list-item>
+            <md-button
+                    ng-click="listItemClick($index)"
+                    class="md-list-item-content">
+                <md-icon class="mdi mdi-eye"></md-icon>
+                <span class="md-inline-list-icon-label">Previsualizar</span>
+            </md-button>
+        </md-list-item>
+        <md-list-item>
+            <md-button
+                    ng-click="listItemClick($index)"
+                    class="md-list-item-content">
+                <md-icon class="mdi mdi-download"></md-icon>
+                <span class="md-inline-list-icon-label">Descargar</span>
+            </md-button>
+        </md-list-item>
+        <md-list-item ng-repeat="opener in openers">
+            <md-button
+                    ng-click="open(opener)"
+                    class="md-list-opener-content" >
+                <md-icon class="mdi mdi-{{opener.icon}}"></md-icon>
+                <span class="md-inline-list-icon-label">{{ opener.name }}</span>
+            </md-button>
+        </md-list-item>
+    </md-list>
+</md-bottom-sheet>

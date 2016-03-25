@@ -11,7 +11,6 @@
 }
 
 /* Arreglos específicos para tabla nodos */
-
 #nodes {
     th {
         &.col-icon {
@@ -264,5 +263,14 @@ tr {
         &.close {
             color: #ff0000;
         }
+    }
+}
+
+/* OpenWidth */
+#open-with {
+    position: fixed;
+
+    .md-subheader-content {
+        font-weight: 600;
     }
 }

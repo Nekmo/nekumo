@@ -140,3 +140,9 @@ tr.alert td {
     height: 32px; }
     #quick-start md-icon.close {
       color: #ff0000; }
+
+/* OpenWidth */
+#open-with {
+  position: fixed; }
+  #open-with .md-subheader-content {
+    font-weight: 600; }

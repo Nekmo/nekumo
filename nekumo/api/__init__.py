@@ -1,5 +1,5 @@
 from nekumo.api.config import QuickStart
-from nekumo.api.nodes import Dir, File, Node, Image
+from nekumo.api.nodes import Dir, File, Node, Image, Video
 
 __author__ = 'nekmo'
 
@@ -10,6 +10,7 @@ stanza_classes = [
     # Por ejemplo, tendremos clases Dir y File, con métodos distintos.
     QuickStart,
     Image,
+    Video,
     Dir,
     File,
     Node,

@@ -76,9 +76,10 @@ class Users(DictParser):
         """Intentar logearse utilizando una dirección.
         """
         address = IPv4Address(address)
+        null_network = IPv4Network('0.0.0.0')
         users = []
         for network, network_users in self._networks.items():
-            if not address in network:
+            if address not in network and not network == null_network:
                 continue
             users.extend(network_users)
         if not users:
@@ -105,10 +106,13 @@ class NekumoConfig(Config):
             "anonymous": {"perms": ["read", "write"], "login_networks": ["0.0.0.0"]},
             "admin": {"login_networks": ["127.0.0.1"], "perms": ["admin"]},
         },
-        "servers": ["web"]
+        "servers": ["web"],
+        "show_quickstart": True,
+        "plugins": []
     }
     schema = {
         "users": Users,
         "servers": ListParser,
         "show_quickstart": BooleanField(),
+        "plugins": ListParser,
     }

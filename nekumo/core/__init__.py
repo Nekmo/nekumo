@@ -13,6 +13,7 @@ class Nekumo(object):
 
     def __init__(self, directory, address_port, config_dir, debug=False):
         self.servers = {}
+        self.plugins = {}
         self.greenleets = []
         self.debug = debug
         self.directory = directory
@@ -24,6 +25,15 @@ class Nekumo(object):
     def get_config(self, config_file):
         return NekumoConfig(config_file)
 
+    def init_plugins(self):
+        for plugin_name in self.config.plugins:
+            module = get_module('nekumo.plugins.{}.Plugin'.format(plugin_name))
+            self.plugins[plugin_name] = module()
+
+    def start_plugins(self):
+        for plugin in self.plugins.values():
+            plugin.start()
+
     def loop(self):
         gevent.joinall(self.greenleets)
 
@@ -34,8 +44,10 @@ class Nekumo(object):
         server.run()
 
     def start(self):
+        self.init_plugins()
         nekumo_debug_server = os.environ.get('NEKUMO_DEBUG_SERVER')
         if nekumo_debug_server is not None:
+            self.start_plugins()
             self.debug_server(nekumo_debug_server)
         else:
             from nekumo.servers.web import WebServer
@@ -43,6 +55,7 @@ class Nekumo(object):
             self.servers['web'] = server
             greenleet = gevent.spawn(server.run)
             self.greenleets.append(greenleet)
+            self.start_plugins()
         return self
 
     def close(self):

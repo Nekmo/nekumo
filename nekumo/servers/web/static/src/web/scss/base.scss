@@ -115,6 +115,12 @@ md-input-container.md-dark-theme-theme label {
     box-shadow: 0 1px rgba(255, 255, 255, 0.1);
 }
 
+.md-open-menu-container {
+    // Por defecto Angular material Design pone el menú contextual como fixed, provocando que
+    // si se encuentra muy abajo de la página no se pueda ver al completo
+    position: absolute;
+}
+
 /* Cabecera */
 header {
     padding-top: $header-padding-top;

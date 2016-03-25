@@ -2,15 +2,17 @@
 import mimetypes
 import os
 import shutil
+from copy import deepcopy
 
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 
 from nekumo.api.base import API, Response
 from nekumo.api.decorators import method, has_perms
-from nekumo.core.exceptions import InvalidNode
+from nekumo.core.exceptions import InvalidNode, NekumoKeyError
 from nekumo.utils.nodes import clear_end_path
 from nekumo.utils.filesystem import copytree
+from nekumo.utils.registering import Registering
 
 __author__ = 'nekmo'
 DIRECTORY_MIMETYPE = 'inode/directory'
@@ -18,7 +20,14 @@ DIRECTORY_MIMETYPE = 'inode/directory'
 mimetypes.init()
 
 
-class Node(API):
+class MetaNode(Registering):
+    def __new__(cls, *args, **kwargs):
+        new_cls = super().__new__(cls, *args, **kwargs)
+        new_cls.openers = []
+        return new_cls
+
+
+class Node(API, metaclass=MetaNode):
     default_element_key = 'node'
     default_list_key = 'nodes'
     type = 'node'
@@ -78,6 +87,42 @@ class Node(API):
     @has_perms('read')
     def extended_info(self):
         return []
+
+    @method
+    @has_perms('read')
+    def get_openers(self):
+        new_openers_list = self._get_openers()
+        return Response(self, openers=new_openers_list)
+
+    @method
+    @has_perms('read')
+    def open(self, opener=None):
+        if opener:
+            return self._get_opener_function(opener)(self)
+
+    def _get_opener_function(self, opener_target):
+        for opener in deepcopy(self._get_openers(False)):
+            function = opener.pop('function')
+            if opener == opener_target:
+                return function
+        raise NekumoKeyError('Invalid opener')
+
+    def _get_openers(self, remove_function=True):
+        bases = [base for base in self.__class__.__bases__ if issubclass(base, Node)]
+        openers = bases[0].openers
+        new_openers_list = []
+        for opener in openers:
+            if hasattr(opener, '__call__'):
+                opener = opener()
+            if isinstance(opener, (list, map)):
+                new_openers_list.extend(opener)
+            else:
+                new_openers_list.append(opener)
+        if remove_function:
+            new_openers_list = deepcopy(new_openers_list)
+            for opener in new_openers_list:
+                opener.pop('function', Node)
+        return new_openers_list
 
 
 class Dir(Node):
@@ -174,10 +219,19 @@ class File(Node):
         return Response(self, info=info)
 
 
-
 class Image(File):
     @staticmethod
     def is_capable(stanza):
         # TODO: hacer esto más eficiente
         return os.path.isfile(stanza.get_path()) and \
                (mimetypes.guess_type(stanza.get_path())[0] or '').startswith('image/')
+
+
+class Video(File):
+
+    @staticmethod
+    def is_capable(stanza):
+        # TODO: hacer esto más eficiente
+        return os.path.isfile(stanza.get_path()) and \
+               (mimetypes.guess_type(stanza.get_path())[0] or '').startswith('video/')
+

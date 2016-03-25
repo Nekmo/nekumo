@@ -304,7 +304,7 @@ app.animation('.ani-slide', [function($timeout) {
   }
 }]);
 
-app.directive('nekumoNodeMenu', function($rootScope, $timeout){
+app.directive('nekumoNodeMenu', function($rootScope, $timeout, $mdBottomSheet){
     return {
         scope: {
             node: '='
@@ -338,7 +338,27 @@ app.directive('nekumoNodeMenu', function($rootScope, $timeout){
                 });
             };
 
+            scope.openWith = function () {
+                $mdBottomSheet.show({
+                    templateUrl: '/.nekumo/static/src/web/templates/open-with.html',
+                    scope: scope
+                });
+                scope.node.execute('get_openers', function(data){
+                    scope.openers = data.openers;
+                });
+            };
+
+            scope.open = function(opener){
+                opener = _.omitBy(opener, function(value, key){ return _.startsWith(key, '$') });
+                scope.node.execute('open', {'opener': opener}, function() {
+
+                });
+            };
+
             scope.menuCtrl = {
+                //openWith: scope.openWith,
+                openWith: scope.openWith,
+                open: scope.open,
                 paste: scope.$parent.paste,
                 copy: scope.$parent.copy,
                 cut: scope.$parent.cut,
@@ -377,8 +397,7 @@ app.config(['$ocLazyLoadProvider', function ($ocLazyLoadProvider) {
               //'/static/src/web/libs/highlightjs/highlight.pack.js',
               //'/static/src/web/libs/angular-highlightjs/angular-highlightjs.js'
           ] : ['/static/build/ace/ace.js', '/static/build/ace.min.js'])
-      }
-      ]
+      }]
     });
 }]);
 
