@@ -21,6 +21,8 @@ if hasattr(shutil, 'which'):
 
 
 class Encoder(object):
+    popen = None
+    output_encode = None
     validation = {
         'video': {
             'bit_depths': ['8 bits'],
@@ -69,6 +71,12 @@ class Encoder(object):
         # ffmpeg -i '[AU] Working!! 2 - 01 [BD][99EB9224].mkv' -c:a copy -c:v libx264 -y -movflags faststart -flags global_header -f matroska -vf subtitles=/tmp/source.mkv /tmp/video3.mp4
         return incompatibilities
 
+    def clean(self):
+        if self.popen:
+            self.popen.kill()
+        if self.output_encode:
+            os.remove(self.output_encode)
+
     def encode(self):
         incompatibilities = self.incompatibilities()
         if not incompatibilities:
@@ -83,5 +91,6 @@ class Encoder(object):
         # Output
         output = os.path.join(TEMPDIR, uuid4().hex + '.mkv')
         args.extend([output])
-        Popen(args)
+        self.popen = Popen(args)
+        self.output_encode = output
         return output

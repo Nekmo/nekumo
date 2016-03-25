@@ -142,6 +142,7 @@ class Management(object):
         try:
             nekumo.loop()
         except (KeyboardInterrupt, SystemExit):
+            print('Interrupt signal detected!')
             nekumo.close()
 
 

@@ -1,11 +1,12 @@
 import datetime
 import mimetypes
 import threading
-from time import sleep
+from operator import itemgetter
+from time import sleep, time
 from uuid import uuid4
 
 import gevent
-from flask import send_file, Response
+from flask import send_file, Response, abort
 
 from nekumo.api import Video
 from nekumo.plugins.chromecast.encoder import Encoder
@@ -13,7 +14,8 @@ from nekumo.utils.network import get_local_address
 
 mimetypes.init()
 CHROMECASTS_LIST_EXPIRATION = datetime.timedelta(seconds=60 * 60)
-encoders = {}
+MAX_STREAMS = 8
+streams = {}
 
 
 def get_address(nekumo, path):
@@ -51,17 +53,17 @@ class Chromecasts(list):
         encoder = Encoder(node.get_path())
         file = encoder.encode()
         id = uuid4().hex
+        mc = device.media_controller
         if file.endswith('.mkv'):
             # Chromecast soporta archivos Mkv si se renombran a mp4
             id += '.mp4'
         else:
             # Le pongo al archivo id la extensión del archivo resultante
             id += '.' + file.split('.')[-1]
-        encoders[id] = file
+        streams[id] = {'file': file, 'encoder': encoder, 'mc': mc, 'last_read': None, 'popen': encoder.popen,
+                       'id': id}
         url = get_address(node.nekumo, '/.nekumo/plugins/chromecast/' + id)
         mimetype = mimetypes.guess_type(id)
-        mc = device.media_controller
-        sleep(5)
         mc.play_media(url, mimetype[0], node.get_name())
 
 
@@ -73,20 +75,57 @@ class ChromeCastPlugin(object):
     def __init__(self):
         pass
 
+    @classmethod
+    def clean_streams(cls):
+        """Para evitar ataques, intentar borrar los medios más antiguos
+        """
+        # Sólo tengo en cuenta aquellos streams que estén encodeando
+        encoding_streams = list(filter(lambda x: x['popen'], streams.values()))
+        if len(encoding_streams) >= MAX_STREAMS:
+            stream = sorted(encoding_streams, key=itemgetter('last_read'))[0]
+            cls.clean_stream(stream)
+
+    @staticmethod
+    def clean_stream(stream):
+        stream['encoder'].clean()
+        del streams[stream['id']]
+
+    @classmethod
+    def clean_all_streams(cls):
+        for stream in streams.values():
+            cls.clean_stream(stream)
+
     def play(self, filename):
-        def stream():
-            file = open(encoders[filename], 'rb')
+        if filename not in streams:
+            abort(404)
+        stream = streams[filename]
+        if not stream['popen']:
+            stream['last_read'] = time()
+            # No se está haciendo encodeo, así que se envía tal cual
+            return send_file(stream['file'])
+        self.clean_streams()
+
+        def stream_yield():
+            file = open(stream['file'], 'rb')
             while True:
+                stream['last_read'] = time()
                 data = file.read(1024 * 8)
-                if not data:
+                if not data and stream['popen'].poll():
                     return
+                elif not data:
+                    # Está tardando en encodear. Esperar un poco y reintentar
+                    sleep(0.2)
+                    continue
                 yield data
-        response = Response(stream())
+        response = Response(stream_yield())
         response.headers['Content-Type'] = mimetypes.guess_type(filename)
         return response
 
     def start(self):
         from nekumo.servers.web.views import web_bp
         web_bp.add_url_rule('/.nekumo/plugins/chromecast/<filename>', 'chromecast', self.play)
+
+    def stop(self):
+        self.clean_all_streams()
 
 Plugin = ChromeCastPlugin

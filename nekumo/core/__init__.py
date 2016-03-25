@@ -34,6 +34,10 @@ class Nekumo(object):
         for plugin in self.plugins.values():
             plugin.start()
 
+    def stop_plugins(self):
+        for plugin in self.plugins.values():
+            plugin.stop()
+
     def loop(self):
         gevent.joinall(self.greenleets)
 
@@ -59,4 +63,4 @@ class Nekumo(object):
         return self
 
     def close(self):
-        pass
+        self.stop_plugins()
