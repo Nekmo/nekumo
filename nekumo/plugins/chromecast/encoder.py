@@ -72,10 +72,11 @@ class Encoder(object):
         #     incompatibilities.add(['extension'])
         video = self.get_video_info()
         extras = self.get_extras()
-        if video and video.find('Bit_depth').text not in self.validation['video']['bit_depths']:
+        if video and getattr(video.find('Bit_depth'), 'text', '8 bits') not in self.validation['video']['bit_depths']:
             # Es un vídeo de 10 bits o superior
             incompatibilities.add('video')
-        if video and video.find('Title').text not in self.validation['video']['codecs']:
+        if video and getattr(video.find('Title'), 'text', video.find('Format').text) \
+                not in self.validation['video']['codecs']:
             # El codec no es válido
             incompatibilities.add('video')
         if 'hard_subs' in extras:

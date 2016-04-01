@@ -10,3 +10,5 @@ Werkzeug==0.11.3
 wheel==0.24.0
 bcrypt==2.0.0
 hachoir3-superdesk==3.0a1.post2
+pyinotify==0.9.6
+blinker==1.4

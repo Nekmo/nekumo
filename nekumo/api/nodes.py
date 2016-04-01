@@ -9,7 +9,8 @@ from hachoir.parser import createParser
 
 from nekumo.api.base import API, Response
 from nekumo.api.decorators import method, has_perms
-from nekumo.core.exceptions import InvalidNode, NekumoKeyError
+from nekumo.core.exceptions import InvalidNode, NekumoKeyError, BadRequestError
+from nekumo.core.pubsub import Listener
 from nekumo.utils.nodes import clear_end_path
 from nekumo.utils.filesystem import copytree
 from nekumo.utils.registering import Registering
@@ -21,8 +22,8 @@ mimetypes.init()
 
 
 class MetaNode(Registering):
-    def __new__(cls, *args, **kwargs):
-        new_cls = super().__new__(cls, *args, **kwargs)
+    def __new__(mcs, *args, **kwargs):
+        new_cls = super().__new__(mcs, *args, **kwargs)
         new_cls.openers = []
         return new_cls
 
@@ -73,7 +74,6 @@ class Node(API, metaclass=MetaNode):
         else:
             return mimetypes.guess_type(self.node)[0]
 
-
     def get_default_new_stanza(self, status=None, end=None):
         if self.method not in ['rm']:
             info = self.info()
@@ -100,6 +100,12 @@ class Node(API, metaclass=MetaNode):
         if opener:
             return self._get_opener_function(opener)(self)
 
+    @method
+    def subscribe(self):
+        if not hasattr(self.request, 'client'):
+            raise BadRequestError('Client attribute is not available in this request.')
+        self.nekumo.pubsub.register(self.node, Listener(self.request.client.send))
+
     def _get_opener_function(self, opener_target):
         for opener in deepcopy(self._get_openers(False)):
             function = opener.pop('function')
@@ -121,7 +127,7 @@ class Node(API, metaclass=MetaNode):
         if remove_function:
             new_openers_list = deepcopy(new_openers_list)
             for opener in new_openers_list:
-                opener.pop('function', Node)
+                opener.pop('function')
         return new_openers_list
 
 
@@ -210,7 +216,7 @@ class File(Node):
             return []
         try:
             metadata = extractMetadata(parser)
-        except Exception as err:
+        except Exception:
             metadata = None
         if metadata is None:
             return []
@@ -234,4 +240,3 @@ class Video(File):
         # TODO: hacer esto más eficiente
         return os.path.isfile(stanza.get_path()) and \
                (mimetypes.guess_type(stanza.get_path())[0] or '').startswith('video/')
-

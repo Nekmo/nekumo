@@ -2,6 +2,7 @@ import os
 import gevent
 
 from nekumo.conf.nekumo_config import NekumoConfig
+from nekumo.core.pubsub import PubSubNode
 from nekumo.utils.modules import get_module
 
 __author__ = 'nekmo'
@@ -12,8 +13,10 @@ class Nekumo(object):
     main_server = 'web'
 
     def __init__(self, directory, address_port, config_dir, debug=False):
+        self.clients = []
         self.servers = {}
         self.plugins = {}
+        self.pubsub = PubSubNode()
         self.greenleets = []
         self.debug = debug
         self.directory = directory
@@ -24,6 +27,10 @@ class Nekumo(object):
 
     def get_config(self, config_file):
         return NekumoConfig(config_file)
+
+    def start_watcher(self):
+        from .watcher import init_watcher
+        init_watcher(self, self.directory)
 
     def init_plugins(self):
         for plugin_name in self.config.plugins:
@@ -49,6 +56,7 @@ class Nekumo(object):
 
     def start(self):
         self.init_plugins()
+        self.start_watcher()
         nekumo_debug_server = os.environ.get('NEKUMO_DEBUG_SERVER')
         if nekumo_debug_server is not None:
             self.start_plugins()

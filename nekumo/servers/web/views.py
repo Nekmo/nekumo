@@ -16,6 +16,7 @@ web_bp = Blueprint('core', __name__, template_folder='templates')
 
 STATIC_DIRECTORY = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
 Serializer = JsonSerializer
+clients = []
 
 
 def execute(stanza):
@@ -63,7 +64,7 @@ def send_js(path):
 def serve_api():
     if request.environ.get('wsgi.websocket'):
         ws = request.environ['wsgi.websocket']
-        nekumo_request = WebRequest()
+        nekumo_request = WebRequest(current_app.nekumo, ws)
         while True:
             try:
                 message = ws.receive()

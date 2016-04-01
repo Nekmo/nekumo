@@ -6,10 +6,14 @@ __author__ = 'nekmo'
 
 
 class Encoder(json.JSONEncoder):
+    request = None
+
     def default(self, obj):
         if isinstance(obj, (map, filter)):
             return list(obj)
         if isinstance(obj, API):
+            if self.request and not obj.request:
+                obj.request = self.request
             return obj.execute()
         if isinstance(obj, NekumoException):
             return obj.serialize()
@@ -17,6 +21,12 @@ class Encoder(json.JSONEncoder):
             return obj.decode('utf-8')
         # Let the base class default method raise the TypeError
         return json.JSONEncoder.default(self, obj)
+
+    def encode(self, o):
+        if hasattr(o, 'request'):
+            # Capturar request por si es útil para subobjetos
+            self.request = o.request
+        return super(Encoder, self).encode(o)
 
 
 class JsonSerializer(API):

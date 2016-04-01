@@ -4,14 +4,18 @@ from gevent.pywsgi import WSGIServer
 import werkzeug.serving
 import werkzeug.wrappers
 import werkzeug.routing
+from geventwebsocket.exceptions import WebSocketError
 from werkzeug.debug import DebuggedApplication
 
+from nekumo.api.serializers import JsonSerializer
+from nekumo.core.exceptions import NekumoConnectionError
 from .config import WebConfig
 from geventwebsocket.handler import WebSocketHandler
-from nekumo.api.base import BaseRequest
+from nekumo.api.base import BaseRequest, BaseClient
 
 __author__ = 'nekmo'
 
+Serializer = JsonSerializer
 NEKUMO_ROOT = '/.nekumo'
 WEBSOCKET_PATH = os.path.join(NEKUMO_ROOT, 'ws')
 ANGULAR_MODULES = ['ngWebSocket', 'ngMaterial', 'ngMdIcons', 'mdColors', 'mdDialogMessage', 'ngSanitize',
@@ -55,10 +59,27 @@ class NekumoHandler(WebSocketHandler, werkzeug.serving.WSGIRequestHandler):
     log_message = werkzeug.serving.WSGIRequestHandler.log_message
 
 
+class WebClient(BaseClient):
+    def __init__(self, nekumo, user, ws, request=None):
+        super().__init__(nekumo, user)
+        self.request = request
+        self.ws = ws
+
+    def send(self, message):
+        if self.request:
+            message.request = self.request
+        message = Serializer.serialize(message)
+        try:
+            self.ws.send(message)
+        except WebSocketError as e:
+            raise NekumoConnectionError('Websocket Error: {}'.format(e))
+
+
 class WebRequest(BaseRequest):
-    def __init__(self):
+    def __init__(self, nekumo, ws):
         super().__init__()
         self.user = get_user()
+        self.client = WebClient(nekumo, self, ws, self)
 
 
 class DebuggedWSApplication(DebuggedApplication):

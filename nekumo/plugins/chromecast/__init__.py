@@ -110,7 +110,7 @@ class ChromeCastPlugin(object):
             while True:
                 stream['last_read'] = time()
                 data = file.read(1024 * 8)
-                if not data and stream['popen'].poll():
+                if not data and stream['popen'].poll() is not None:
                     return
                 elif not data:
                     # Está tardando en encodear. Esperar un poco y reintentar

@@ -7,24 +7,27 @@ var WebSocketFactory = function($websocket, $q, $mdToast, $mdDialog, DialogMessa
     var dataStream = $websocket(sprintf('ws://%s%s', document.location.host, websocket_path));
 
     // Diccionario con los ids de aquellas peticiones que se han hecho que están esperando una respuesta.
-    var waiting_responses = {};
+    var waitingResponses = {};
+    var registeredMethods = {};
 
     dataStream.onMessage(function(message) {
         var data = JSON.parse(message.data);
         var id = data.id;
-        if(waiting_responses[id]){
-            var waiting = waiting_responses[id];
+        var method = data.method;
+        if(waitingResponses[id]){
+            var waiting = waitingResponses[id];
             if(data.status != 'error'){
                 if(data.end == true){
                     // Lo eliminamos de los que esperan respuesta si está como end == true
-                    _.remove(waiting_responses, function(x){ return waiting == x });
+                    _.remove(waitingResponses, function(x){ return waiting == x });
                 }
                 waiting.resolve(data);
             } else {
                 waiting.reject(data);
             }
-        } else {
-
+        } else if(registeredMethods[method]) {
+            var registeredMethod = registeredMethods[method];
+            registeredMethod(data);
         }
     });
 
@@ -67,8 +70,16 @@ var WebSocketFactory = function($websocket, $q, $mdToast, $mdDialog, DialogMessa
                   var waiting = {};
                   waiting.resolve = resolve;
                   waiting.reject = reject;
-                  waiting_responses[data.id] = waiting;
+                  waitingResponses[data.id] = waiting;
               });
+          },
+          recv: function(fn){
+              dataStream.onMessage(function(message){
+                  fn(JSON.parse(message.data));
+              });
+          },
+          register: function (method, fn) {
+              registeredMethods[method] = fn;
           }
       };
 };

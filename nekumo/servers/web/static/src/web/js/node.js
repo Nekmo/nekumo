@@ -199,6 +199,10 @@ app.factory('Node', function(WebSocket){
             WebSocket.get({'method': 'rm', 'node': self.get_node()}).then(success, error, complete);
         };
 
+        self.subscribe = function(success, error, complete){
+            self.execute('subscribe', {}, success, error, complete);
+        };
+
         self.execute = function(method, data, success, error, complete){
             if(!(success) && _.isFunction(data)){
                 success = data;
@@ -414,6 +418,10 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
                 $('#nodes').find('tr').addClass('ani-slide');
                 $('#loading').hide();
                 $scope.slow_load = false;
+
+                // Suscribirse a este directorio
+                Node.create(node).subscribe();
+
                 resolve();
             }, function(data){
                 DialogMessage.error('Error al listar el directorio',
@@ -679,6 +687,10 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
         });
     };
 
+    $scope.registerMethod = function(method, fn){
+        WebSocket.register(method, fn);
+    };
+
     $scope.$on('$locationChangeSuccess', function(event, newUrl, oldUrl) {
         function previewFile(url){
             var node = url.split('/');
@@ -714,6 +726,10 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
         }
     });
 
+    $scope.$on('nodeCreate', function(event, data){
+        console.debug(data);
+    });
+
     $scope.toggleRight = buildToggler('right');
 
     $scope.isOpenRight = function(){
@@ -726,6 +742,10 @@ app.controller('Nodes', function ($rootScope, $scope, $timeout, $location, $wind
             node = getPathWithoutFile(node);
             $location.path(node).search({});
         }
+    });
+
+    $scope.registerMethod('node_event', function(data){
+        $scope.$broadcast('node' + _.capitalize(data.action), data);
     });
 
     $scope._ = _;

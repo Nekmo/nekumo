@@ -1,7 +1,10 @@
 import os
+from uuid import uuid4
+
 from nekumo.core import Nekumo
 
 from nekumo.core.exceptions import InvalidStanza, InvalidNode, NekumoException, SecurityError, ProgrammingError
+from nekumo.core.pubsub import Event
 from nekumo.utils.nodes import clear_start_path
 from nekumo.utils.registering import RegisteringBase
 from nekumo.api.decorators import method as method_decorator
@@ -18,6 +21,7 @@ class API(RegisteringBase):
     node = ''
     method = ''
     params = None
+    _all_params = None
     status = 'success' # error, success, info, warning
     id = None
     end = True
@@ -26,8 +30,10 @@ class API(RegisteringBase):
     def __init__(self, nekumo, node='', method='', status='success', id=None, end=True, request=None, **params):
         if not isinstance(nekumo, Nekumo):
             raise AttributeError('Nekumo argument is not a Nekumo instance.')
+        self._all_params = {}
         for param in set(locals()) - {'self'}:
             setattr(self, param, locals()[param])
+            self._all_params[param] = locals()[param]
 
     @method_decorator
     def exists(self):
@@ -40,11 +46,12 @@ class API(RegisteringBase):
     def is_valid(self):
         return self.node is not None and self.method is not None
 
-    def execute(self):
-        if not self.method:
+    def execute(self, method=None):
+        method = method or self.method
+        if not method:
             raise InvalidStanza('Method is required.')
         params = self.params or {}
-        method = getattr(self, self.method, None)
+        method = getattr(self, method, None)
         if method is None:
             raise InvalidStanza('Invalid method \'{}\''.format(self.method), self.id)
         try:
@@ -132,6 +139,11 @@ class API(RegisteringBase):
     def get_own_best_class(self):
         return self.get_best_class(self)
 
+    def get_instance(self):
+        params = dict(self._all_params)
+        params.update(params.pop('params', {}))
+        return self.get_own_best_class()(**params)
+
 
 class Response(dict):
     _update_stanza = True
@@ -142,12 +154,38 @@ class Response(dict):
             self['id'] = stanza.id
             self['status'] = stanza.status
             self['method'] = stanza.method
+        else:
+            self['id'] = self.get('id', uuid4().hex)
+            self['status'] = self.get('status', 'success')
 
     def set_update_stanza(self, update_stanza=True):
         self._update_stanza = update_stanza
         return self
 
 
+class BaseClient(object):
+    def __init__(self, nekumo, user):
+        self.nekumo = nekumo
+        self.user = user
+        self.register()
+
+    def send(self, message):
+        raise NotImplementedError
+
+    def register(self):
+        self.nekumo.clients.append(self)
+
+
 class BaseRequest(object):
     def __init__(self):
         pass
+
+
+class NekumoNodeEvent(Event, Response):
+    def __init__(self, nekumo, path, action):
+        Event.__init__(self, path, action)
+        Response.__init__(self)
+        self['method'] = 'node_event'
+        self['action'] = self.action
+        self['path'] = self.path
+        self['node'] = API(nekumo, path, 'info').get_instance()

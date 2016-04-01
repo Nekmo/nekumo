@@ -53,3 +53,11 @@ class ProgrammingError(NekumoException):
 
 class NekumoKeyError(NekumoException):
     pass
+
+
+class BadRequestError(NekumoException):
+    pass
+
+
+class NekumoConnectionError(NekumoException):
+    pass
